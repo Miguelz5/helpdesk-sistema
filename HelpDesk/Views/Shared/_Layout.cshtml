@@ -15,22 +15,82 @@
         body {
             padding-top: 60px;
         }
+
+        /* SOLUÇÃO DEFINITIVA PARA TEXTO PRETO NOS DROPDOWNS */
+        /* Forçar cor preta em TODOS os elementos de formulário */
+        .form-control,
+        .form-select,
+        select,
+        input:not([type="checkbox"]):not([type="radio"]),
+        textarea {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
+
+            /* Estado focus */
+            .form-control:focus,
+            .form-select:focus {
+                color: #000000 !important;
+                background-color: #ffffff !important;
+                border-color: #6f42c1;
+                box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+            }
+
+            /* Options dos dropdowns */
+            .form-select option,
+            select option,
+            .form-control option {
+                color: #000000 !important;
+                background-color: #ffffff !important;
+            }
+
+            /* Placeholder também preto */
+            .form-control::placeholder,
+            .form-select::placeholder {
+                color: #666666 !important;
+                opacity: 1;
+            }
+
+            /* Para elementos selecionados */
+            .form-select:focus option:checked,
+            select:focus option:checked {
+                color: #000000 !important;
+                background-color: #e9ecef !important;
+            }
+
+            /* Remover qualquer estilo do Bootstrap que force cores escuras */
+            .form-select:not([multiple]):not([size]) {
+                background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+            }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-purple fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="/Chamados">Sistema Help Desk</a>
+            <a class="navbar-brand" href="@Url.Action("Index", "Chamados")">Sistema Help Desk</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="/Chamados">Chamados</a>
+                        <a class="nav-link" href="@Url.Action("Index", "Chamados")">Chamados</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/Chamados/Create">Novo Chamado</a>
+                        <a class="nav-link" href="@Url.Action("Create", "Chamados")">Novo Chamado</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Index", "Usuarios")">Administradores</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="navbar-text me-3">
+                            Olá, @Context.Session.GetString("UsuarioNome")
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Logout", "Auth")">Sair</a>
                     </li>
                 </ul>
             </div>
@@ -38,6 +98,21 @@
     </nav>
 
     <div class="container body-content">
+        @if (TempData["MensagemSucesso"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show mt-3">
+                @TempData["MensagemSucesso"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["MensagemErro"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mt-3">
+                @TempData["MensagemErro"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
         @RenderBody()
         <hr />
         <footer>

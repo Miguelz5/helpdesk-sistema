@@ -1,7 +1,18 @@
+using Microsoft.AspNetCore.Http; // Adicione este using
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Adicione estas linhas para sessão:
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 
@@ -19,9 +30,11 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-// Esta é a sintaxe correta para .NET Core:
+// Adicione esta linha:
+app.UseSession();
+
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Chamados}/{action=Index}/{id?}");
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 app.Run();

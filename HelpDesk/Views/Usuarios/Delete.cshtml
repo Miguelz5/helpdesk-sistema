@@ -1,0 +1,32 @@
+﻿@model HelpDesk.Models.Usuario
+
+@{
+    ViewBag.Title = "Excluir Usuário";
+}
+
+<h2>Excluir Usuário</h2>
+
+<h3>Tem certeza que deseja excluir este usuário?</h3>
+<div>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>Nome</dt>
+        <dd>@Model.Nome</dd>
+
+        <dt>Email</dt>
+        <dd>@Model.Email</dd>
+
+        <dt>Data de Cadastro</dt>
+        <dd>@Model.DataCadastro.ToString("dd/MM/yyyy HH:mm")</dd>
+    </dl>
+
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Excluir" class="btn btn-danger" /> |
+            @Html.ActionLink("Voltar para a lista", "Index")
+        </div>
+    }
+</div>

@@ -1,8 +1,9 @@
-﻿using HelpDesk.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.AspNetCore.Http;
+using HelpDesk.Models;
 
 namespace HelpDesk.Controllers
 {
@@ -11,9 +12,27 @@ namespace HelpDesk.Controllers
         private static List<Chamado> chamados = new List<Chamado>();
         private static int nextId = 1;
 
+        // Helper method para verificar login
+        private IActionResult CheckLogin()
+        {
+            if (!AuthController.IsUserLoggedIn(HttpContext))
+            {
+                // Só mostra mensagem de erro se não for a página inicial
+                if (HttpContext.Request.Path != "/")
+                {
+                    TempData["MensagemErro"] = "Por favor, faça login para acessar o sistema";
+                }
+                return RedirectToAction("Login", "Auth");
+            }
+            return null;
+        }
+
         // GET: Chamados
         public IActionResult Index()
         {
+            var loginCheck = CheckLogin();
+            if (loginCheck != null) return loginCheck;
+
             var chamadosUrgentes = chamados.Where(c => c.Prioridade == "Urgente").ToList();
             ViewBag.ChamadosUrgentes = chamadosUrgentes;
             ViewBag.TotalChamados = chamados.Count;
@@ -26,6 +45,9 @@ namespace HelpDesk.Controllers
         // GET: Chamados/Create
         public IActionResult Create()
         {
+            var loginCheck = CheckLogin();
+            if (loginCheck != null) return loginCheck;
+
             ViewBag.StatusList = new List<string> { "Aberto", "Em Andamento", "Resolvido" };
             ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
 
@@ -37,6 +59,9 @@ namespace HelpDesk.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(Chamado chamado)
         {
+            var loginCheck = CheckLogin();
+            if (loginCheck != null) return loginCheck;
+
             if (ModelState.IsValid)
             {
                 chamado.Id = nextId++;
@@ -54,6 +79,9 @@ namespace HelpDesk.Controllers
         // GET: Chamados/Edit/5
         public IActionResult Edit(int id)
         {
+            var loginCheck = CheckLogin();
+            if (loginCheck != null) return loginCheck;
+
             Chamado chamado = chamados.FirstOrDefault(c => c.Id == id);
             if (chamado == null)
             {
@@ -71,6 +99,9 @@ namespace HelpDesk.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, Chamado chamado)
         {
+            var loginCheck = CheckLogin();
+            if (loginCheck != null) return loginCheck;
+
             if (id != chamado.Id)
             {
                 return NotFound();
@@ -108,6 +139,9 @@ namespace HelpDesk.Controllers
         // GET: Chamados/Delete/5
         public IActionResult Delete(int id)
         {
+            var loginCheck = CheckLogin();
+            if (loginCheck != null) return loginCheck;
+
             Chamado chamado = chamados.FirstOrDefault(c => c.Id == id);
             if (chamado == null)
             {
@@ -121,6 +155,9 @@ namespace HelpDesk.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
+            var loginCheck = CheckLogin();
+            if (loginCheck != null) return loginCheck;
+
             Chamado chamado = chamados.FirstOrDefault(c => c.Id == id);
             if (chamado != null)
             {

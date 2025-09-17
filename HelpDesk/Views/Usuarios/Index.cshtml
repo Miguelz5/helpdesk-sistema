@@ -1,0 +1,32 @@
+﻿@model IEnumerable<HelpDesk.Models.Usuario>
+
+@{
+    ViewBag.Title = "Usuários Administradores";
+}
+
+<h2>Usuários Administradores</h2>
+
+<p>
+    @Html.ActionLink("Adicionar Administrador", "Create", null, new { @class = "btn btn-primary" })
+    @Html.ActionLink("Voltar para Chamados", "Index", "Chamados", null, new { @class = "btn btn-secondary" })
+</p>
+
+<table class="table table-striped">
+    <tr>
+        <th>Nome</th>
+        <th>Email</th>
+        <th>Data de Cadastro</th>
+        <th>Ações</th>
+    </tr>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Nome</td>
+            <td>@item.Email</td>
+            <td>@item.DataCadastro.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>
+                @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @class = "btn btn-sm btn-danger" })
+            </td>
+        </tr>
+    }
+</table>
