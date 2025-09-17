@@ -1,0 +1,72 @@
+﻿@model HelpDesk.Models.Chamado
+
+@{
+    ViewBag.Title = "Excluir Chamado";
+}
+
+<h2>Excluir Chamado</h2>
+
+<h3>Tem certeza que deseja excluir este chamado?</h3>
+<div>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Titulo)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Titulo)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Descricao)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Descricao)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.DataAbertura)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.DataAbertura)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Status)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Status)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Prioridade)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Prioridade)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Responsavel)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Responsavel)
+        </dd>
+
+    </dl>
+
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Excluir" class="btn btn-danger" /> |
+            @Html.ActionLink("Voltar para a lista", "Index", null, new { @class = "btn btn-default" })
+        </div>
+    }
+</div>
