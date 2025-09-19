@@ -3,30 +3,85 @@
 @{
     ViewBag.Title = "Usuários Administradores";
 }
+<link href="~/css/site.css" rel="stylesheet" />
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="page-title">
+                <i class="fas fa-users-cog me-2 text-primary"></i>
+                Usuários Administradores
+            </h2>
+            <p class="text-muted">Gerencie os administradores do sistema Help Desk</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <!-- REMOVI O BOTÃO "ADICIONAR ADMINISTRADOR" DAQUI -->
+            @Html.ActionLink(" Voltar para Chamados", "Index", "Chamados", null, new { @class = "btn btn-secondary btn-custom" })
+        </div>
+    </div>
 
-<h2>Usuários Administradores</h2>
-
-<p>
-    @Html.ActionLink("Adicionar Administrador", "Create", null, new { @class = "btn btn-primary" })
-    @Html.ActionLink("Voltar para Chamados", "Index", "Chamados", null, new { @class = "btn btn-secondary" })
-</p>
-
-<table class="table table-striped">
-    <tr>
-        <th>Nome</th>
-        <th>Email</th>
-        <th>Data de Cadastro</th>
-        <th>Ações</th>
-    </tr>
-    @foreach (var item in Model)
-    {
-        <tr>
-            <td>@item.Nome</td>
-            <td>@item.Email</td>
-            <td>@item.DataCadastro.ToString("dd/MM/yyyy HH:mm")</td>
-            <td>
-                @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @class = "btn btn-sm btn-danger" })
-            </td>
-        </tr>
-    }
-</table>
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2 text-primary"></i>
+                Lista de Administradores
+            </h5>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="fas fa-user me-1"></i> Nome</th>
+                                <th><i class="fas fa-envelope me-1"></i> Email</th>
+                                <th><i class="fas fa-calendar me-1"></i> Data de Cadastro</th>
+                                <th><i class="fas fa-cogs me-1"></i> Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-3">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <strong>@item.Nome</strong>
+                                        </div>
+                                    </td>
+                                    <td>@item.Email</td>
+                                    <td>@item.DataCadastro.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        @Html.ActionLink(" Editar", "Edit", new { id = item.Id }, new { 
+                                                @class = "btn btn-outline-primary btn-sm me-1" 
+                                           })
+                                        @Html.ActionLink(" Excluir", "Delete", new { id = item.Id }, 
+                                            new { 
+                                                @class = "btn btn-outline-danger btn-sm",
+                                                onclick = "return confirm('Tem certeza que deseja excluir este administrador?');" 
+                                            })
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h5 class="text-muted">Nenhum administrador cadastrado</h5>
+                    <p class="text-muted">Adicione o primeiro administrador para começar</p>
+                    <!-- BOTÃO VERDE - AGORA É O ÚNICO NA PÁGINA -->
+                    @Html.ActionLink(" Adicionar Administrador", "Create", null, new { 
+                        @class = "btn btn-success-custom",
+                        style = "background-color: #157347; border-color: #157347; color: white; padding: 10px 20px; font-weight: 500;" 
+                    })
+                </div>
+            }
+        </div>
+    </div>
+</div>

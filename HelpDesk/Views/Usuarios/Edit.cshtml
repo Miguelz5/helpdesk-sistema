@@ -1,8 +1,9 @@
 ﻿@model HelpDesk.Models.Usuario
 
 @{
-    ViewBag.Title = "Adicionar Administrador";
+    ViewBag.Title = "Editar Administrador";
 }
+
 <link href="~/css/site.css" rel="stylesheet" />
 
 <div class="container py-4">
@@ -11,17 +12,19 @@
             <div class="card form-card">
                 <div class="card-header form-card-header">
                     <h4 class="mb-0">
-                        <i class="fas fa-user-plus me-2"></i>
-                        Adicionar Novo Administrador
+                        <i class="fas fa-user-edit me-2"></i>
+                        Editar Administrador
                     </h4>
                 </div>
                 <div class="card-body p-4">
                     @using (Html.BeginForm())
                     {
                         @Html.AntiForgeryToken()
+                        @Html.HiddenFor(model => model.Id)
+                        @Html.HiddenFor(model => model.DataCadastro)
+
                         @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
 
-                        <!-- Campos do formulário (mantidos iguais) -->
                         <div class="row mb-4">
                             <div class="col-md-12">
                                 <h5 class="form-section-title">
@@ -61,20 +64,19 @@
                                 <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                 @Html.PasswordFor(model => model.Senha, new {
                                                                 @class = "form-control",
-                                                                placeholder = "Digite uma senha segura"
+                                                                placeholder = "Deixe em branco para manter a senha atual",
+                                                                value = ""
                                                                 })
                             </div>
-                            @Html.ValidationMessageFor(model => model.Senha, "", new { @class = "text-danger small" })
-                            <div class="form-text">Use pelo menos 6 caracteres incluindo letras e números</div>
+                            <div class="form-text">Deixe em branco para manter a senha atual</div>
                         </div>
                     </div>
 
-                    <!-- BOTÕES CORRIGIDOS -->
                     <div class="row mt-4">
                         <div class="col-md-12">
-                            <div class="d-flex gap-2 justify-content-start">
+                            <div class="d-flex gap-2 justify-content-end">
                                 <button type="submit" class="btn btn-success-custom">
-                                    <i class="fas fa-save me-1"></i> Adicionar Administrador
+                                    <i class="fas fa-save me-1"></i> Salvar Alterações
                                 </button>
                                 @Html.ActionLink(" Cancelar", "Index", "Usuarios", null, new {
                                                                 @class = "btn btn-secondary"
@@ -88,3 +90,18 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Script para não exigir a senha se estiver em branco
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                const senhaInput = document.getElementById('Senha');
+                if (senhaInput.value === '') {
+                    senhaInput.disabled = true;
+                }
+            });
+        });
+    </script>
+}

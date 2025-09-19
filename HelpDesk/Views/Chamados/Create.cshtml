@@ -11,6 +11,7 @@
         </h4>
     </div>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="~/css/site.css" rel="stylesheet" />
     <div class="card-body">
         @using (Html.BeginForm())
         {
@@ -86,32 +87,5 @@
 
 @section Scripts {
     <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
-    <style>
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .input-group-text {
-            background-color: #f8f9fa;
-            border-right: none;
-        }
-
-        .form-control {
-            border-left: none;
-        }
-
-            .form-control:focus {
-                box-shadow: none;
-                border-color: #ced4da;
-            }
-
-        .card {
-            border: none;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-
-        .card-header {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-        }
-    </style>
+    
 }

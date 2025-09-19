@@ -270,3 +270,133 @@ body {
 .chamado-error-text {
     font-size: 0.85rem;
 }
+
+/* ===== ESTILOS PARA USUÁRIOS/ADMINISTRADORES ===== */
+
+/* Avatar circular - CORRIGIDO */
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background-color: #e9ecef !important; /* Fundo cinza claro */
+    color: #495057 !important; /* Ícone cinza escuro */
+    border: 1px solid #dee2e6;
+}
+
+    .avatar-circle:hover {
+        background-color: #dee2e6 !important;
+        color: #212529 !important;
+    }
+
+/* Tabelas melhoradas */
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Botões personalizados */
+.btn-custom {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 8px 20px;
+    transition: all 0.2s ease;
+}
+
+.btn-primary-custom {
+    background: var(--primary-color);
+    border: none;
+    color: white;
+}
+
+    .btn-primary-custom:hover {
+        background: #4338ca;
+        transform: translateY(-1px);
+        color: white;
+    }
+
+/* Formulários */
+.form-section-title {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+
+.form-control {
+    border-left: none;
+}
+
+    .form-control:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+.form-text {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+/* Estados vazios */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+
+/* Cards de formulário */
+.form-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.form-card-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+    padding: 15px 20px;
+}
+.btn-success-custom {
+    background-color: #157347;
+    border-color: #157347;
+    color: white;
+}
+
+    .btn-success-custom:hover {
+        background-color: #0d5c3a;
+        border-color: #0d5c3a;
+        color: white;
+    }
+
+/* Botão de editar personalizado */
+.btn-outline-primary {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+    .btn-outline-primary:hover {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+    }
