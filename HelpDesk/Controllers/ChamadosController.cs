@@ -37,6 +37,7 @@ namespace HelpDesk.Controllers
             ViewBag.ChamadosUrgentes = chamadosUrgentes;
             ViewBag.TotalChamados = chamados.Count;
             ViewBag.ChamadosAbertos = chamados.Count(c => c.Status == "Aberto");
+            ViewBag.ChamadosEmAndamento = chamados.Count(c => c.Status == "Em Andamento"); // NOVO
             ViewBag.ChamadosResolvidos = chamados.Count(c => c.Status == "Resolvido");
 
             return View(chamados);
