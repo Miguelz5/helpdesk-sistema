@@ -55,6 +55,14 @@
             </div>
         }
 
+        @if (ViewBag.MensagemErro != null)
+{
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        @ViewBag.MensagemErro
+    </div>
+}
+
         @using (Html.BeginForm("Login", "Auth", FormMethod.Post))
         {
             @Html.AntiForgeryToken()
@@ -71,13 +79,6 @@
                 @Html.ValidationMessageFor(model => model.Senha, "", new { @class = "text-danger" })
             </div>
 
-            <div class="form-group mb-3">
-                <div class="form-check">
-                    @Html.CheckBoxFor(model => model.LembrarMe, new { @class = "form-check-input" })
-                    @Html.LabelFor(model => model.LembrarMe, new { @class = "form-check-label" })
-                </div>
-            </div>
-
             <button type="submit" class="btn btn-primary w-100 mb-3">Entrar</button>
 
             @if (!ViewData.ModelState.IsValid)
@@ -87,12 +88,6 @@
                 </div>
             }
         }
-
-        <div class="text-center">
-            <p class="text-muted">Credenciais padrão:</p>
-            <p class="small">Email: admin@helpdesk.com<br>Senha: admin123</p>
-        </div>
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

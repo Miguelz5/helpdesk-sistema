@@ -1,56 +1,176 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.AspNetCore.Http;
+﻿using HelpDesk.Data;
 using HelpDesk.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization; // ← ADICIONAR ESTE USING
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace HelpDesk.Controllers
 {
     public class UsuariosController : Controller
     {
-        private static List<Usuario> usuarios = new List<Usuario>();
-        private static int nextId = 1;
+        private readonly AppDbContext _context;
 
-        // Helper method para verificar login
-        private IActionResult CheckLogin()
+        public UsuariosController(AppDbContext context)
         {
-            if (!AuthController.IsUserLoggedIn(HttpContext))
+            _context = context;
+        }
+
+        // GET: Usuarios/Perfil - Meu perfil
+        [Authorize] // ← AGORA VAI FUNCIONAR
+        public async Task<IActionResult> Perfil()
+        {
+            // Pegar ID do usuário logado
+            var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var usuario = await _context.Usuarios.FindAsync(usuarioId);
+            if (usuario == null)
             {
-
-                if (HttpContext.Request.Path != "/")
-                {
-                    // Só mostra mensagem de erro se não for a página inicial
-                    TempData["MensagemErro"] = "Por favor, faça login para acessar o sistema";
-                }
-                return RedirectToAction("Login", "Auth");
+                return NotFound();
             }
-            return null;
+
+            return View(usuario);
         }
 
-        // GET: Usuarios - MÉTODO QUE ESTAVA FALTANDO!!!
-        public IActionResult Index()
+        // POST: Usuarios/Perfil - Editar meu perfil
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Perfil(Usuario usuario)
         {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
+            // Pegar ID do usuário logado
+            var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
-            return View(usuarios);
+            if (usuarioId != usuario.Id)
+            {
+                return Forbid(); // Não pode editar outro usuário
+            }
+
+            // Remover validação da senha para permitir campo vazio
+            ModelState.Remove("Senha");
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var usuarioExistente = await _context.Usuarios.FindAsync(usuarioId);
+                    if (usuarioExistente == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Verificar se email já existe (exceto para o próprio usuário)
+                    if (await _context.Usuarios.AnyAsync(u => u.Email == usuario.Email && u.Id != usuarioId))
+                    {
+                        ModelState.AddModelError("Email", "Este email já está em uso por outro usuário");
+                        return View(usuario);
+                    }
+
+                    // Atualizar dados
+                    usuarioExistente.Nome = usuario.Nome;
+                    usuarioExistente.Email = usuario.Email;
+
+                    // Só atualiza a senha se foi informada
+                    if (!string.IsNullOrEmpty(usuario.Senha))
+                    {
+                        usuarioExistente.Senha = usuario.Senha;
+                    }
+
+                    _context.Update(usuarioExistente);
+                    await _context.SaveChangesAsync();
+
+                    // Atualizar nome no cookie de autenticação
+                    await UpdateAuthCookie(usuarioExistente);
+
+                    TempData["MensagemSucesso"] = "Perfil atualizado com sucesso!";
+                    return RedirectToAction(nameof(Perfil));
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!UsuarioExists(usuario.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+            return View(usuario);
         }
 
-        // Método estático para acesso à lista de usuários
-        public static List<Usuario> GetUsuarios()
+        // Método para atualizar o cookie de autenticação
+        private async Task UpdateAuthCookie(Usuario usuario)
         {
-            return usuarios;
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, usuario.Nome),
+                new Claim(ClaimTypes.Email, usuario.Email),
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                new Claim("IsAdmin", usuario.IsAdministrador.ToString())
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+            await HttpContext.SignInAsync(claimsPrincipal);
         }
 
         // GET: Usuarios
-        // GET: Usuarios/Edit/5
-        public IActionResult Edit(int id)
+        [Authorize] // ← PROTEGER A LISTA DE USUÁRIOS
+        public async Task<IActionResult> Index()
         {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
+            var usuarios = await _context.Usuarios.ToListAsync();
+            return View(usuarios);
+        }
 
-            Usuario usuario = usuarios.FirstOrDefault(u => u.Id == id);
+        // GET: Usuarios/Create
+        [Authorize]
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: Usuarios/Create
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Usuario usuario)
+        {
+            if (ModelState.IsValid)
+            {
+                // Verificar se email já existe
+                if (await _context.Usuarios.AnyAsync(u => u.Email == usuario.Email))
+                {
+                    ModelState.AddModelError("Email", "Este email já está cadastrado");
+                    return View(usuario);
+                }
+
+                usuario.DataCadastro = DateTime.Now;
+                usuario.IsAdministrador = true;
+
+                _context.Add(usuario);
+                await _context.SaveChangesAsync();
+
+                TempData["MensagemSucesso"] = "Administrador cadastrado com sucesso!";
+                return RedirectToAction(nameof(Index));
+            }
+            return View(usuario);
+        }
+
+        // GET: Usuarios/Edit/5
+        [Authorize]
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var usuario = await _context.Usuarios.FindAsync(id);
             if (usuario == null)
             {
                 return NotFound();
@@ -60,32 +180,52 @@ namespace HelpDesk.Controllers
 
         // POST: Usuarios/Edit/5
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Usuario usuario)
+        public async Task<IActionResult> Edit(int id, Usuario usuario)
         {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
-
             if (id != usuario.Id)
             {
                 return NotFound();
             }
 
-            // Remova a validação automática do ModelState para Senha
+            // Remover validação da senha para permitir campo vazio
             ModelState.Remove("Senha");
 
             if (ModelState.IsValid)
             {
-                Usuario existing = usuarios.FirstOrDefault(u => u.Id == usuario.Id);
-                if (existing != null)
+                try
                 {
-                    existing.Nome = usuario.Nome;
-                    existing.Email = usuario.Email;
+                    var usuarioExistente = await _context.Usuarios.FindAsync(id);
+                    if (usuarioExistente == null)
+                    {
+                        return NotFound();
+                    }
 
-                    // Só atualiza a senha se foi informada e não está vazia
+                    // Atualizar apenas os campos permitidos
+                    usuarioExistente.Nome = usuario.Nome;
+                    usuarioExistente.Email = usuario.Email;
+
+                    // Só atualiza a senha se foi informada
                     if (!string.IsNullOrEmpty(usuario.Senha))
                     {
-                        existing.Senha = usuario.Senha;
+                        usuarioExistente.Senha = usuario.Senha;
+                    }
+
+                    _context.Update(usuarioExistente);
+                    await _context.SaveChangesAsync();
+
+                    TempData["MensagemSucesso"] = "Administrador atualizado com sucesso!";
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!UsuarioExists(usuario.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
                     }
                 }
                 return RedirectToAction(nameof(Index));
@@ -93,67 +233,57 @@ namespace HelpDesk.Controllers
             return View(usuario);
         }
 
-        // GET: Usuarios/Create
-        public IActionResult Create()
-        {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
-
-            return View();
-        }
-
-        // POST: Usuarios/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Usuario usuario)
-        {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
-
-            // Validação manual da senha apenas no Create
-            if (string.IsNullOrEmpty(usuario.Senha))
-            {
-                ModelState.AddModelError("Senha", "A senha é obrigatória");
-            }
-
-            if (ModelState.IsValid)
-            {
-                usuario.Id = nextId++;
-                usuario.DataCadastro = DateTime.Now;
-                usuario.IsAdministrador = true;
-                usuarios.Add(usuario);
-                return RedirectToAction(nameof(Index));
-            }
-            return View(usuario);
-        }
         // GET: Usuarios/Delete/5
-        public IActionResult Delete(int id)
+        [Authorize]
+        public async Task<IActionResult> Delete(int? id)
         {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
+            if (id == null)
+            {
+                return NotFound();
+            }
 
-            Usuario usuario = usuarios.FirstOrDefault(u => u.Id == id);
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (usuario == null)
             {
                 return NotFound();
             }
+
             return View(usuario);
         }
 
         // POST: Usuarios/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
+            var usuarioLogadoId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var usuario = await _context.Usuarios.FindAsync(id);
 
-            Usuario usuario = usuarios.FirstOrDefault(u => u.Id == id);
             if (usuario != null)
             {
-                usuarios.Remove(usuario);
+                _context.Usuarios.Remove(usuario);
+                await _context.SaveChangesAsync();
+
+                // Se o usuário deletou a própria conta, fazer logout
+                if (usuarioLogadoId == id)
+                {
+                    await HttpContext.SignOutAsync();
+                    HttpContext.Session.Clear();
+                    TempData["MensagemSucesso"] = "Sua conta foi excluída com sucesso!";
+                    return RedirectToAction("Login", "Auth");
+                }
+
+                TempData["MensagemSucesso"] = "Administrador excluído com sucesso!";
             }
+
             return RedirectToAction(nameof(Index));
+        }
+
+        private bool UsuarioExists(int id)
+        {
+            return _context.Usuarios.Any(e => e.Id == id);
         }
     }
 }

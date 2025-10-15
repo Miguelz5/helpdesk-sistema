@@ -14,17 +14,26 @@
             <p class="text-muted">Gerencie os administradores do sistema Help Desk</p>
         </div>
         <div class="col-md-4 text-end">
-            <!-- REMOVI O BOTÃO "ADICIONAR ADMINISTRADOR" DAQUI -->
-            @Html.ActionLink(" Voltar para Chamados", "Index", "Chamados", null, new { @class = "btn btn-secondary btn-custom" })
+            <div class="d-flex gap-2 justify-content-end">
+                @Html.ActionLink(" Voltar para Chamados", "Index", "Chamados", null, new { @class = "btn btn-secondary btn-custom" })
+                <!-- BOTÃO ADICIONADO AQUI -->
+                @Html.ActionLink(" Cadastrar Usuário", "Create", null, new { 
+                    @class = "btn btn-success-custom",
+                    style = "background-color: #157347; border-color: #157347; color: white; padding: 10px 20px; font-weight: 500;" 
+                })
+            </div>
         </div>
     </div>
 
     <div class="card shadow-sm">
         <div class="card-header bg-white">
-            <h5 class="mb-0">
-                <i class="fas fa-list me-2 text-primary"></i>
-                Lista de Administradores
-            </h5>
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2 text-primary"></i>
+                    Lista de Administradores
+                </h5>
+                
+            </div>
         </div>
         <div class="card-body">
             @if (Model.Any())
@@ -75,7 +84,7 @@
                     <i class="fas fa-users"></i>
                     <h5 class="text-muted">Nenhum administrador cadastrado</h5>
                     <p class="text-muted">Adicione o primeiro administrador para começar</p>
-                    <!-- BOTÃO VERDE - AGORA É O ÚNICO NA PÁGINA -->
+                    <!-- BOTÃO VERDE - MANTIDO PARA QUANDO NÃO HÁ USUÁRIOS -->
                     @Html.ActionLink(" Adicionar Administrador", "Create", null, new { 
                         @class = "btn btn-success-custom",
                         style = "background-color: #157347; border-color: #157347; color: white; padding: 10px 20px; font-weight: 500;" 

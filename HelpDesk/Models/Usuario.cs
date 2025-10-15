@@ -13,10 +13,10 @@ namespace HelpDesk.Models
         [EmailAddress(ErrorMessage = "Email em formato inválido")]
         public string Email { get; set; }
 
-        // Senha sem [Required] - validação será feita no controller
+        [Required(ErrorMessage = "A senha é obrigatória")]
         public string Senha { get; set; }
 
-        public DateTime DataCadastro { get; set; }
-        public bool IsAdministrador { get; set; }
+        public DateTime DataCadastro { get; set; } = DateTime.Now;
+        public bool IsAdministrador { get; set; } = true;
     }
 }

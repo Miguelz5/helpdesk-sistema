@@ -1,222 +1,161 @@
-﻿@model IEnumerable<HelpDesk.Models.Chamado>
+﻿ @model IEnumerable<HelpDesk.Models.Chamado>
 
 @{
-    ViewBag.Title = "Sistema Help Desk";
+    ViewBag.Title = "Sistema Help Desk - Dashboard";
 }
 
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <link href="~/css/site.css" rel="stylesheet" />
-</head>
-<body>
-    <div class="container-fluid mt-4">
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col-md-8">
-                <h2 class="page-title">
-                    <i class="fas fa-tachometer-alt me-2 text-primary"></i>
-                    Sistema Help Desk - Visão Administrativa
-                </h2>
-            </div>
-            <div class="col-md-4 text-end">
-                @Html.ActionLink("Criar Novo Chamado", "Create", null, new { @class = "btn btn-primary-custom btn-custom" })
-            </div>
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="page-title">
+                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                Sistema Help Desk - Visão Administrativa
+            </h2>
         </div>
+        <div class="col-md-4 text-end">
+            @Html.ActionLink("Criar Novo Chamado", "Create", null, new { @class = "btn btn-primary-custom btn-custom" })
+        </div>
+    </div>
 
-        <!-- Cards de Estatísticas -->
-        <div class="row mb-4">
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card primary">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="stat-icon" style="background: var(--primary-color);">
-                                <i class="fas fa-ticket-alt"></i>
-                            </div>
-                            <div class="ms-3">
-                                <h3 class="stat-number">@ViewBag.TotalChamados</h3>
-                                <p class="stat-label">Total de Chamados</p>
-                            </div>
+    <!-- Cards de Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon" style="background: var(--primary-color);">
+                            <i class="fas fa-ticket-alt"></i>
                         </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card warning">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="stat-icon" style="background: var(--warning-color);">
-                                <i class="fas fa-clock"></i>
-                            </div>
-                            <div class="ms-3">
-                                <h3 class="stat-number">@ViewBag.ChamadosAbertos</h3>
-                                <p class="stat-label">Chamados Abertos</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card success">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="stat-icon" style="background: var(--success-color);">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <div class="ms-3">
-                                <h3 class="stat-number">@ViewBag.ChamadosResolvidos</h3>
-                                <p class="stat-label">Chamados Resolvidos</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card danger">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="stat-icon" style="background: var(--danger-color);">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div class="ms-3">
-                                <h3 class="stat-number">@ViewBag.ChamadosUrgentes.Count</h3>
-                                <p class="stat-label">Chamados Urgentes</p>
-                            </div>
+                        <div class="ms-3">
+                            <h3 class="stat-number">@ViewBag.TotalChamados</h3>
+                            <p class="stat-label">Total de Chamados</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Gráfico -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-white border-0 py-3">
-                        <h5 class="card-title mb-0 section-header">
-                            <i class="fas fa-chart-pie section-icon"></i>
-                            Distribuição de Chamados
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="statusChart"></canvas>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon" style="background: var(--warning-color);">
+                            <i class="fas fa-clock"></i>
                         </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-white border-0 py-3">
-                        <h5 class="card-title mb-0 section-header">
-                            <i class="fas fa-info-circle section-icon"></i>
-                            Resumo do Sistema
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="text-muted">Taxa de Resolução</span>
-                            <strong class="text-success">
-                                @{
-                                    var taxaResolucao = ViewBag.TotalChamados > 0 ? (double)ViewBag.ChamadosResolvidos / ViewBag.TotalChamados * 100 : 0;
-                                }
-                                @taxaResolucao.ToString("F1")%
-                            </strong>
+                        <div class="ms-3">
+                            <h3 class="stat-number">@ViewBag.ChamadosAbertos</h3>
+                            <p class="stat-label">Chamados Abertos</p>
                         </div>
-                        <div class="progress mb-4" style="height: 8px;">
-                            <div class="progress-bar bg-success" style="width: @(taxaResolucao)%"></div>
-                        </div>
-                        <div class="row text-center">
-                            <div class="col-4">
-                                <div class="border-end">
-                                    <h4 class="text-warning mb-0">@ViewBag.ChamadosAbertos</h4>
-                                    <small class="text-muted">Abertos</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="border-end">
-                                    <h4 class="text-info mb-0">@ViewBag.ChamadosEmAndamento</h4>
-                                    <small class="text-muted">Em Andamento</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <h4 class="text-success mb-0">@ViewBag.ChamadosResolvidos</h4>
-                                <small class="text-muted">Resolvidos</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        <!-- Chamados Urgentes -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header bg-white border-0 py-3">
-                        <h5 class="card-title mb-0 section-header">
-                            <i class="fas fa-exclamation-triangle section-icon text-danger"></i>
-                            Chamados Urgentes
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        @if (ViewBag.ChamadosUrgentes.Count > 0)
-                        {
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th><i class="fas fa-heading me-1"></i> Título</th>
-                                            <th><i class="fas fa-align-left me-1"></i> Descrição</th>
-                                            <th><i class="fas fa-calendar me-1"></i> Data de Abertura</th>
-                                            <th><i class="fas fa-flag me-1"></i> Status</th>
-                                            <th><i class="fas fa-cogs me-1"></i> Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var item in ViewBag.ChamadosUrgentes)
-                                        {
-                                            <tr class="border-start border-danger border-3">
-                                                <td><strong>@item.Titulo</strong></td>
-                                                <td>@item.Descricao</td>
-                                                <td>@item.DataAbertura.ToString("dd/MM/yyyy HH:mm")</td>
-                                                <td><span class="badge badge-warning">@item.Status</span></td>
-                                                <td>
-                                                    @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @class = "btn btn-outline-primary btn-sm me-1" })
-                                                    @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @class = "btn btn-outline-danger btn-sm" })
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="alert alert-info alert-custom">
-                                <i class="fas fa-info-circle me-2"></i>
-                                Nenhum chamado urgente no momento.
-                            </div>
-                        }
                     </div>
                 </div>
             </div>
         </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon" style="background: var(--success-color);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h3 class="stat-number">@ViewBag.ChamadosResolvidos</h3>
+                            <p class="stat-label">Chamados Resolvidos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card danger">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon" style="background: var(--danger-color);">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h3 class="stat-number">@ViewBag.ChamadosUrgentes.Count</h3>
+                            <p class="stat-label">Chamados Urgentes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Todos os Chamados -->
-        <div class="row">
-            <div class="col-12">
-                <div class="table-modern">
-                    <div class="p-3 bg-white">
-                        <h5 class="mb-3 section-header">
-                            <i class="fas fa-list section-icon"></i>
-                            Todos os Chamados
-                        </h5>
+    <!-- Gráfico -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 section-header">
+                        <i class="fas fa-chart-pie section-icon"></i>
+                        Distribuição de Chamados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="statusChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 section-header">
+                        <i class="fas fa-info-circle section-icon"></i>
+                        Resumo do Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">Taxa de Resolução</span>
+                        <strong class="text-success">
+                            @{
+                                var taxaResolucao = ViewBag.TotalChamados > 0 ? (double)ViewBag.ChamadosResolvidos / ViewBag.TotalChamados * 100 : 0;
+                            }
+                            @taxaResolucao.ToString("F1")%
+                        </strong>
+                    </div>
+                    <div class="progress mb-4" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: @(taxaResolucao)%"></div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h4 class="text-warning mb-0">@ViewBag.ChamadosAbertos</h4>
+                                <small class="text-muted">Abertos</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h4 class="text-info mb-0">@ViewBag.ChamadosEmAndamento</h4>
+                                <small class="text-muted">Em Andamento</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-success mb-0">@ViewBag.ChamadosResolvidos</h4>
+                            <small class="text-muted">Resolvidos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chamados Urgentes -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 section-header">
+                        <i class="fas fa-exclamation-triangle section-icon text-danger"></i>
+                        Chamados Urgentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.ChamadosUrgentes.Count > 0)
+                    {
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -225,51 +164,17 @@
                                         <th><i class="fas fa-align-left me-1"></i> Descrição</th>
                                         <th><i class="fas fa-calendar me-1"></i> Data de Abertura</th>
                                         <th><i class="fas fa-flag me-1"></i> Status</th>
-                                        <th><i class="fas fa-sort-amount-up me-1"></i> Prioridade</th>
-                                        <th><i class="fas fa-user me-1"></i> Responsável</th>
                                         <th><i class="fas fa-cogs me-1"></i> Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var item in Model)
+                                    @foreach (var item in ViewBag.ChamadosUrgentes)
                                     {
-                                        <tr>
+                                        <tr class="border-start border-danger border-3">
                                             <td><strong>@item.Titulo</strong></td>
                                             <td>@item.Descricao</td>
                                             <td>@item.DataAbertura.ToString("dd/MM/yyyy HH:mm")</td>
-                                            <td>
-                                                @if (item.Status == "Aberto")
-                                                {
-                                                    <span class="badge badge-warning status-badge">@item.Status</span>
-                                                }
-                                                else if (item.Status == "Em Andamento")
-                                                {
-                                                    <span class="badge badge-info status-badge">@item.Status</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge badge-success status-badge">@item.Status</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                @if (item.Prioridade == "Urgente")
-                                                {
-                                                    <span class="badge badge-danger">@item.Prioridade</span>
-                                                }
-                                                else if (item.Prioridade == "Alta")
-                                                {
-                                                    <span class="badge badge-warning">@item.Prioridade</span>
-                                                }
-                                                else if (item.Prioridade == "Média")
-                                                {
-                                                    <span class="badge badge-info">@item.Prioridade</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge badge-secondary">@item.Prioridade</span>
-                                                }
-                                            </td>
-                                            <td>@item.Responsavel</td>
+                                            <td><span class="badge badge-warning">@item.Status</span></td>
                                             <td>
                                                 @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @class = "btn btn-outline-primary btn-sm me-1" })
                                                 @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @class = "btn btn-outline-danger btn-sm" })
@@ -279,63 +184,185 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info alert-custom">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Nenhum chamado urgente no momento.
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Configuração do gráfico de pizza - ATUALIZADO
-        const ctx = document.getElementById('statusChart').getContext('2d');
-        const statusChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Abertos', 'Em Andamento', 'Resolvidos', 'Urgentes'],
-                datasets: [{
-                    data: [
-                        @ViewBag.ChamadosAbertos,
-                        @ViewBag.ChamadosEmAndamento,  // NOVO
-                        @ViewBag.ChamadosResolvidos,
-                        @ViewBag.ChamadosUrgentes.Count
-                    ],
-                    backgroundColor: [
-                        '#f59e0b', // warning - Abertos
-                        '#3b82f6', // info - Em Andamento (NOVA COR)
-                        '#10b981', // success - Resolvidos
-                        '#ef4444'  // danger - Urgentes
-                    ],
-                    borderWidth: 0,
-                    hoverOffset: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            font: {
-                                size: 12
-                            }
-                        }
+    <!-- Todos os Chamados -->
+    <div class="row">
+        <div class="col-12">
+            <div class="table-modern">
+                <div class="p-3 bg-white">
+                    <h5 class="mb-3 section-header">
+                        <i class="fas fa-list section-icon"></i>
+                        Todos os Chamados
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-heading me-1"></i> Título</th>
+                                    <th><i class="fas fa-align-left me-1"></i> Descrição</th>
+                                    <th><i class="fas fa-calendar me-1"></i> Data de Abertura</th>
+                                    <th><i class="fas fa-flag me-1"></i> Status</th>
+                                    <th><i class="fas fa-sort-amount-up me-1"></i> Prioridade</th>
+                                    <th><i class="fas fa-user me-1"></i> Responsável</th>
+                                    <th><i class="fas fa-cogs me-1"></i> Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td><strong>@item.Titulo</strong></td>
+                                        <td>@item.Descricao</td>
+                                        <td>@item.DataAbertura.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            @if (item.Status == "Aberto")
+                                            {
+                                                <span class="badge badge-warning status-badge">@item.Status</span>
+                                            }
+                                            else if (item.Status == "Em Andamento")
+                                            {
+                                                <span class="badge badge-info status-badge">@item.Status</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-success status-badge">@item.Status</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (item.Prioridade == "Urgente")
+                                            {
+                                                <span class="badge badge-danger">@item.Prioridade</span>
+                                            }
+                                            else if (item.Prioridade == "Alta")
+                                            {
+                                                <span class="badge badge-warning">@item.Prioridade</span>
+                                            }
+                                            else if (item.Prioridade == "Média")
+                                            {
+                                                <span class="badge badge-info">@item.Prioridade</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-secondary">@item.Prioridade</span>
+                                            }
+                                        </td>
+                                        <td>@item.Responsavel</td>
+                                        <td>
+                                            @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @class = "btn btn-outline-primary btn-sm me-1" })
+                                            @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @class = "btn btn-outline-danger btn-sm" })
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script específico para esta página -->
+<script>
+    // Aguardar o DOM e Chart.js carregarem
+    document.addEventListener('DOMContentLoaded', function() {
+        // Pequeno delay para garantir que Chart.js carregou
+        setTimeout(function() {
+            const ctx = document.getElementById('statusChart');
+
+            if (!ctx) {
+                console.error('Canvas não encontrado');
+                return;
+            }
+
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js não carregou');
+                return;
+            }
+
+            console.log('Criando gráfico...');
+
+            try {
+                const statusChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Abertos', 'Em Andamento', 'Resolvidos', 'Urgentes'],
+                        datasets: [{
+                            data: [
+                                @ViewBag.ChamadosAbertos,
+                                @ViewBag.ChamadosEmAndamento,
+                                @ViewBag.ChamadosResolvidos,
+                                @ViewBag.ChamadosUrgentes.Count
+                            ],
+                            backgroundColor: [
+                                '#f59e0b', // Laranja - Abertos
+                                '#3b82f6', // Azul - Em Andamento
+                                '#10b981', // Verde - Resolvidos
+                                '#ef4444'  // Vermelho - Urgentes
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#ffffff',
+                            hoverOffset: 15
+                        }]
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
-                                return context.label + ': ' + context.raw + ' (' + percentage + '%)';
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    font: {
+                                        size: 12,
+                                        family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleFont: {
+                                    size: 13
+                                },
+                                bodyFont: {
+                                    size: 13
+                                },
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
                             }
+                        },
+                        cutout: '65%',
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true
                         }
                     }
-                },
-                cutout: '60%'
+                });
+
+                console.log('✅ Gráfico criado com sucesso!');
+            } catch (error) {
+                console.error('❌ Erro ao criar gráfico:', error);
             }
-        });
-    </script>
-</body>
-</html>
+        }, 100);
+    });
+</script>

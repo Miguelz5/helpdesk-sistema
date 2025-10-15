@@ -1,85 +1,103 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using HelpDesk.Models;
-using System.Linq;
-using Microsoft.AspNetCore.Http;
+using HelpDesk.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 
 namespace HelpDesk.Controllers
 {
     public class AuthController : Controller
     {
-        // Credenciais padrão
-        private const string DEFAULT_EMAIL = "admin@helpdesk.com";
-        private const string DEFAULT_PASSWORD = "admin123";
+        private readonly AppDbContext _context;
+
+        public AuthController(AppDbContext context)
+        {
+            _context = context;
+        }
 
         // GET: Auth/Login
         public IActionResult Login()
         {
-            // Se já estiver logado, redireciona para os chamados
-            if (HttpContext.Session.GetString("UsuarioLogado") == "true")
-            {
-                return RedirectToAction("Index", "Chamados");
-            }
             return View();
         }
 
         // POST: Auth/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Login(LoginModel login)
+        public async Task<IActionResult> Login(string email, string senha)
         {
-            if (ModelState.IsValid)
+            try
             {
-                bool loginValido = false;
-                string nomeUsuario = "";
+                // LIMPAR MENSAGENS ANTIGAS
+                TempData.Remove("MensagemSucesso");
+                TempData.Remove("MensagemErro");
+                ModelState.Clear(); // Limpar erros anteriores
 
-                // Verificar credenciais padrão
-                if (login.Email == DEFAULT_EMAIL && login.Senha == DEFAULT_PASSWORD)
+                // Buscar usuário no banco
+                var usuario = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.Email == email && u.Senha == senha);
+
+                if (usuario != null)
                 {
-                    loginValido = true;
-                    nomeUsuario = "Administrador Padrão";
-                }
+                    // Criar claims (dados do usuário)
+                    var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, usuario.Nome),
+                new Claim(ClaimTypes.Email, usuario.Email),
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                new Claim("IsAdmin", usuario.IsAdministrador.ToString())
+            };
 
-                // Verificar usuários cadastrados
-                if (!loginValido)
-                {
-                    var usuario = UsuariosController.GetUsuarios()
-                        .FirstOrDefault(u => u.Email == login.Email && u.Senha == login.Senha && u.IsAdministrador);
+                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 
-                    if (usuario != null)
-                    {
-                        loginValido = true;
-                        nomeUsuario = usuario.Nome;
-                    }
-                }
+                    // Criar cookie de autenticação
+                    await HttpContext.SignInAsync(claimsPrincipal);
 
-                if (loginValido)
-                {
-                    // Configurar sessão
-                    HttpContext.Session.SetString("UsuarioLogado", "true");
-                    HttpContext.Session.SetString("UsuarioNome", nomeUsuario);
-                    HttpContext.Session.SetString("UsuarioEmail", login.Email);
+                    // Salvar dados na sessão
+                    HttpContext.Session.SetString("UsuarioNome", usuario.Nome);
+                    HttpContext.Session.SetString("UsuarioEmail", usuario.Email);
+                    HttpContext.Session.SetInt32("UsuarioId", usuario.Id);
 
+                    TempData["MensagemSucesso"] = "Login realizado com sucesso!";
                     return RedirectToAction("Index", "Chamados");
                 }
-
-                ModelState.AddModelError(string.Empty, "Email ou senha inválidos");
+                else
+                {
+                    // ADICIONAR ERRO AO MODELSTATE (aparece na view de login)
+                    ModelState.AddModelError("", "Email ou senha inválidos");
+                    ViewBag.MensagemErro = "Email ou senha inválidos"; // Alternativa
+                    return View();
+                }
             }
-
-            return View(login);
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Erro ao conectar com o banco de dados");
+                return View();
+            }
         }
 
         // GET: Auth/Logout
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
-            // Limpar sessão
+            await HttpContext.SignOutAsync();
             HttpContext.Session.Clear();
-            return RedirectToAction("Login");
+            TempData["MensagemSucesso"] = "Logout realizado com sucesso!";
+            return RedirectToAction("Login", "Auth");
         }
 
-        // Método helper para verificar se usuário está logado
-        public static bool IsUserLoggedIn(HttpContext context)
+        // GET: Auth/AccessDenied
+        public IActionResult AccessDenied()
         {
-            return context.Session.GetString("UsuarioLogado") == "true";
+            return View();
+        }
+
+        // Método auxiliar para verificar se usuário está logado
+        public static bool IsUserLoggedIn(HttpContext httpContext)
+        {
+            return httpContext.User.Identity.IsAuthenticated;
         }
     }
 }

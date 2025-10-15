@@ -1,0 +1,158 @@
+﻿@model HelpDesk.Models.Usuario
+
+@{
+    ViewBag.Title = "Meu Perfil";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>
+                        Meu Perfil
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+
+                    <!-- Mensagens -->
+                    @if (TempData["MensagemSucesso"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @TempData["MensagemSucesso"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Informações do Perfil -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5 class="form-section-title">
+                                <i class="fas fa-id-card me-2"></i>
+                                Informações Pessoais
+                            </h5>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">ID do Usuário</label>
+                            <input type="text" class="form-control" value="@Model.Id" disabled>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Data de Cadastro</label>
+                            <input type="text" class="form-control" value="@Model.DataCadastro.ToString("dd/MM/yyyy HH:mm")" disabled>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Tipo de Usuário</label>
+                            <input type="text" class="form-control" value="@(Model.IsAdministrador ? "Administrador" : "Usuário")" disabled>
+                        </div>
+                    </div>
+
+                    <!-- Formulário de Edição -->
+                    @using (Html.BeginForm("Perfil", "Usuarios", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.HiddenFor(model => model.Id)
+                        @Html.HiddenFor(model => model.DataCadastro)
+                        @Html.HiddenFor(model => model.IsAdministrador)
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h5 class="form-section-title">
+                                    <i class="fas fa-edit me-2"></i>
+                                    Editar Dados
+                                </h5>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                @Html.LabelFor(model => model.Nome, htmlAttributes: new { @class = "form-label fw-semibold" })
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    @Html.EditorFor(model => model.Nome, new { htmlAttributes = new {
+                                    @class = "form-control",
+                                                                placeholder = "Seu nome completo"
+                                                                } })
+                            </div>
+                            @Html.ValidationMessageFor(model => model.Nome, "", new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            @Html.LabelFor(model => model.Email, htmlAttributes: new { @class = "form-label fw-semibold" })
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                @Html.EditorFor(model => model.Email, new { htmlAttributes = new {
+                                                                @class = "form-control",
+                                                                placeholder = "seu@email.com",
+                                                                type = "email"
+                                                                } })
+                            </div>
+                            @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-12 mb-4">
+                            @Html.LabelFor(model => model.Senha, htmlAttributes: new { @class = "form-label fw-semibold" })
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                @Html.PasswordFor(model => model.Senha, new {
+                                                                @class = "form-control",
+                                                                placeholder = "Deixe em branco para manter a senha atual",
+                                                                value = ""
+                                                                })
+                            </div>
+                            @Html.ValidationMessageFor(model => model.Senha, "", new { @class = "text-danger small" })
+                            <div class="form-text">Deixe em branco para manter a senha atual</div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="d-flex justify-content-between">
+                                @Html.ActionLink(" Voltar para Dashboard", "Index", "Chamados", null, new {
+                                                                @class = "btn btn-secondary"
+                                                                })
+                                <button type="submit" class="btn btn-success-custom">
+                                    <i class="fas fa-save me-1"></i> Salvar Alterações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                                        }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-section-title {
+        color: #0d6efd;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .btn-success-custom {
+        background-color: #157347;
+        border-color: #157347;
+        color: white;
+    }
+
+        .btn-success-custom:hover {
+            background-color: #0d5c3a;
+            border-color: #0d5c3a;
+            color: white;
+        }
+</style>
