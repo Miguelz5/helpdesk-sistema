@@ -16,11 +16,14 @@ namespace HelpDesk.Models
         public DateTime DataAbertura { get; set; }
         public DateTime? DataFechamento { get; set; }
 
-        [Required(ErrorMessage = "O status é obrigatório")]
+        // REMOVA O [Required] - status será definido automaticamente
         public string Status { get; set; }
 
         [Required(ErrorMessage = "A prioridade é obrigatória")]
         public string Prioridade { get; set; }
+
+        [Required(ErrorMessage = "A categoria é obrigatória")]
+        public string Categoria { get; set; }
 
         public string Responsavel { get; set; }
     }

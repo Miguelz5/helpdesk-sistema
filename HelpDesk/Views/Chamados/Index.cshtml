@@ -14,7 +14,7 @@
             </h2>
         </div>
         <div class="col-md-4 text-end">
-            @Html.ActionLink("Criar Novo Chamado", "Create", null, new { @class = "btn btn-primary-custom btn-custom" })
+            @Html.ActionLink("Criar Novo Chamado", "Create", "Chamados", null, new { @class = "btn btn-primary-custom btn-custom" })
         </div>
     </div>
 
@@ -212,6 +212,7 @@
                                 <tr>
                                     <th><i class="fas fa-heading me-1"></i> Título</th>
                                     <th><i class="fas fa-align-left me-1"></i> Descrição</th>
+                                    <th><i class="fas fa-tag me-1"></i> Categoria</th> <!-- NOVA COLUNA -->
                                     <th><i class="fas fa-calendar me-1"></i> Data de Abertura</th>
                                     <th><i class="fas fa-flag me-1"></i> Status</th>
                                     <th><i class="fas fa-sort-amount-up me-1"></i> Prioridade</th>
@@ -225,8 +226,17 @@
                                     <tr>
                                         <td><strong>@item.Titulo</strong></td>
                                         <td>@item.Descricao</td>
-                                        <td>@item.DataAbertura.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td>
+                                            <span class="badge" style="background-color:
+                        @(item.Categoria == "Hardware" ? "#6f42c1" :
+                                                                                      item.Categoria == "Software" ? "#0d6efd" :
+                                                                                      item.Categoria == "Rede" ? "#198754" :
+                                                                                      item.Categoria == "Acesso" ? "#fd7e14" : "#6c757d"); color: white;">
+                                            @item.Categoria
+                                        </span>
+                                    </td>
+                                    <td>@item.DataAbertura.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
                                             @if (item.Status == "Aberto")
                                             {
                                                 <span class="badge badge-warning status-badge">@item.Status</span>

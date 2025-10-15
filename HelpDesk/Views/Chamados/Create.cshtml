@@ -17,75 +17,109 @@
         {
             @Html.AntiForgeryToken()
 
+            <!-- MENSAGEM DE ERRO GERAL -->
+            @if (TempData["MensagemErro"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    @TempData["MensagemErro"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- VALIDAÇÃO DO FORMULÁRIO -->
             @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
 
-            <div class="form-group">
-                @Html.LabelFor(model => model.Titulo, htmlAttributes: new { @class = "control-label" })
+            <div class="form-group mb-3">
+                @Html.LabelFor(model => model.Titulo, htmlAttributes: new { @class = "control-label fw-bold" })
                 <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-heading"></i></span>
-                    @Html.EditorFor(model => model.Titulo, new { htmlAttributes = new { @class = "form-control", placeholder = "Digite o título do chamado" } })
+                    @Html.EditorFor(model => model.Titulo, new { htmlAttributes = new { 
+                        @class = "form-control" + (ViewData.ModelState["Titulo"]?.Errors?.Count > 0 ? " is-invalid" : ""),
+                        placeholder = "Digite o título do chamado"
+                    } })
                 </div>
-                @Html.ValidationMessageFor(model => model.Titulo, "", new { @class = "text-danger small" })
+                @Html.ValidationMessageFor(model => model.Titulo, "", new { @class = "text-danger small fw-bold" })
             </div>
 
-            <div class="form-group">
-                @Html.LabelFor(model => model.Descricao, htmlAttributes: new { @class = "control-label" })
+            <div class="form-group mb-3">
+                @Html.LabelFor(model => model.Descricao, htmlAttributes: new { @class = "control-label fw-bold" })
                 <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-align-left"></i></span>
-                    @Html.TextAreaFor(model => model.Descricao, new { @class = "form-control", rows = 5, placeholder = "Descreva detalhadamente o problema..." })
+                    @Html.TextAreaFor(model => model.Descricao, new { 
+                        @class = "form-control" + (ViewData.ModelState["Descricao"]?.Errors?.Count > 0 ? " is-invalid" : ""), 
+                        rows = 5, 
+                        placeholder = "Descreva detalhadamente o problema..." 
+                    })
                 </div>
-                @Html.ValidationMessageFor(model => model.Descricao, "", new { @class = "text-danger small" })
+                @Html.ValidationMessageFor(model => model.Descricao, "", new { @class = "text-danger small fw-bold" })
+            </div>
+
+            <!-- CATEGORIA -->
+            <div class="form-group mb-3">
+                @Html.LabelFor(model => model.Categoria, htmlAttributes: new { @class = "control-label fw-bold" })
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                    @Html.DropDownListFor(model => model.Categoria,
+                        new SelectList(ViewBag.CategoriaList),
+                        "Selecione a categoria",
+                        new { 
+                            @class = "form-control" + (ViewData.ModelState["Categoria"]?.Errors?.Count > 0 ? " is-invalid" : "")
+                        })
+                </div>
+                @Html.ValidationMessageFor(model => model.Categoria, "", new { @class = "text-danger small fw-bold" })
             </div>
 
             <div class="row">
                 <div class="col-md-6">
-                    <div class="form-group">
-                        @Html.LabelFor(model => model.Prioridade, htmlAttributes: new { @class = "control-label" })
+                    <div class="form-group mb-3">
+                        @Html.LabelFor(model => model.Prioridade, htmlAttributes: new { @class = "control-label fw-bold" })
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-exclamation-triangle"></i></span>
                             @Html.DropDownListFor(model => model.Prioridade,
-                            new SelectList(ViewBag.PrioridadeList),
-                                                "Selecione a prioridade",
-                                                new { @class = "form-control" })
+                                new SelectList(ViewBag.PrioridadeList),
+                                "Selecione a prioridade",
+                                new { 
+                                    @class = "form-control" + (ViewData.ModelState["Prioridade"]?.Errors?.Count > 0 ? " is-invalid" : "")
+                                })
+                        </div>
+                        @Html.ValidationMessageFor(model => model.Prioridade, "", new { @class = "text-danger small fw-bold" })
                     </div>
-                    @Html.ValidationMessageFor(model => model.Prioridade, "", new { @class = "text-danger small" })
+                </div>
+                <div class="col-md-6">
+                    <!-- Espaço vazio -->
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    @Html.LabelFor(model => model.Status, htmlAttributes: new { @class = "control-label" })
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-tasks"></i></span>
-                        @Html.DropDownListFor(model => model.Status,
-                                                new SelectList(ViewBag.StatusList),
-                                                "Selecione o status",
-                                                new { @class = "form-control" })
-                    </div>
-                    @Html.ValidationMessageFor(model => model.Status, "", new { @class = "text-danger small" })
+
+            <div class="form-group mb-3">
+                @Html.LabelFor(model => model.Responsavel, htmlAttributes: new { @class = "control-label fw-bold" })
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                    @Html.EditorFor(model => model.Responsavel, new { htmlAttributes = new { 
+                        @class = "form-control" + (ViewData.ModelState["Responsavel"]?.Errors?.Count > 0 ? " is-invalid" : ""),
+                        placeholder = "Nome do responsável"
+                    } })
                 </div>
+                @Html.ValidationMessageFor(model => model.Responsavel, "", new { @class = "text-danger small fw-bold" })
             </div>
-        </div>
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.Responsavel, htmlAttributes: new { @class = "control-label" })
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-user"></i></span>
-                @Html.EditorFor(model => model.Responsavel, new { htmlAttributes = new { @class = "form-control", placeholder = "Nome do responsável" } })
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check"></i> Criar Chamado
+                </button>
+                @Html.ActionLink(" Voltar", "Index", "Chamados", null, new { @class = "btn btn-secondary" })
             </div>
-            @Html.ValidationMessageFor(model => model.Responsavel, "", new { @class = "text-danger small" })
-        </div>
-
-        <div class="form-group mt-4">
-            <button type="submit" class="btn btn-success">
-                <i class="fas fa-check"></i> Criar Chamado
-            </button>
-            @Html.ActionLink(" Voltar", "Index", "Chamados", null, new { @class = "btn btn-secondary" })
-        </div>
-                }
+        }
     </div>
 </div>
 
-@section Scripts {
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+<style>
+    .is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
     
-}
+    .text-danger {
+        font-weight: 500 !important;
+    }
+</style>

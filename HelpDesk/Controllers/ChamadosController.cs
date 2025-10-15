@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using HelpDesk.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Http;
-using HelpDesk.Models;
 
 namespace HelpDesk.Controllers
 {
@@ -17,7 +17,6 @@ namespace HelpDesk.Controllers
         {
             if (!AuthController.IsUserLoggedIn(HttpContext))
             {
-                // Só mostra mensagem de erro se não for a página inicial
                 if (HttpContext.Request.Path != "/")
                 {
                     TempData["MensagemErro"] = "Por favor, faça login para acessar o sistema";
@@ -33,11 +32,15 @@ namespace HelpDesk.Controllers
             var loginCheck = CheckLogin();
             if (loginCheck != null) return loginCheck;
 
-            var chamadosUrgentes = chamados.Where(c => c.Prioridade == "Urgente").ToList();
+            // CHAMADOS URGENTES: Apenas os NÃO RESOLVIDOS com prioridade Urgente
+            var chamadosUrgentes = chamados
+                .Where(c => c.Prioridade == "Urgente" && c.Status != "Resolvido")
+                .ToList();
+
             ViewBag.ChamadosUrgentes = chamadosUrgentes;
             ViewBag.TotalChamados = chamados.Count;
             ViewBag.ChamadosAbertos = chamados.Count(c => c.Status == "Aberto");
-            ViewBag.ChamadosEmAndamento = chamados.Count(c => c.Status == "Em Andamento"); // NOVO
+            ViewBag.ChamadosEmAndamento = chamados.Count(c => c.Status == "Em Andamento");
             ViewBag.ChamadosResolvidos = chamados.Count(c => c.Status == "Resolvido");
 
             return View(chamados);
@@ -46,51 +49,49 @@ namespace HelpDesk.Controllers
         // GET: Chamados/Create
         public IActionResult Create()
         {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
-
-            ViewBag.StatusList = new List<string> { "Aberto", "Em Andamento", "Resolvido" };
             ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
+            ViewBag.CategoriaList = new List<string> { "Hardware", "Software", "Rede", "Acesso", "Outros" };
 
             return View();
         }
 
-        // POST: Chamados/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(Chamado chamado)
         {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
+            // REMOVER VALIDAÇÃO DO STATUS - será definido automaticamente
+            ModelState.Remove("Status");
 
             if (ModelState.IsValid)
             {
+                // DEFINIR STATUS AUTOMATICAMENTE COMO "Aberto"
                 chamado.Id = nextId++;
+                chamado.Status = "Aberto";
                 chamado.DataAbertura = DateTime.Now;
+
                 chamados.Add(chamado);
+
+                TempData["MensagemSucesso"] = "Chamado criado com sucesso!";
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.StatusList = new List<string> { "Aberto", "Em Andamento", "Resolvido" };
             ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
+            ViewBag.CategoriaList = new List<string> { "Hardware", "Software", "Rede", "Acesso", "Outros" };
 
             return View(chamado);
         }
 
         // GET: Chamados/Edit/5
-        public IActionResult Edit(int id)
+        public IActionResult Edit(int? id)
         {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
+            if (id == null) return NotFound();
 
-            Chamado chamado = chamados.FirstOrDefault(c => c.Id == id);
-            if (chamado == null)
-            {
-                return NotFound();
-            }
+            var chamado = chamados.FirstOrDefault(c => c.Id == id);
+            if (chamado == null) return NotFound();
 
             ViewBag.StatusList = new List<string> { "Aberto", "Em Andamento", "Resolvido" };
             ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
+            ViewBag.CategoriaList = new List<string> { "Hardware", "Software", "Rede", "Acesso", "Outros" };
 
             return View(chamado);
         }
@@ -117,6 +118,7 @@ namespace HelpDesk.Controllers
                     existing.Descricao = chamado.Descricao;
                     existing.Status = chamado.Status;
                     existing.Prioridade = chamado.Prioridade;
+                    existing.Categoria = chamado.Categoria; // NOVO CAMPO
                     existing.Responsavel = chamado.Responsavel;
 
                     if (chamado.Status == "Resolvido" && existing.DataFechamento == null)
@@ -128,11 +130,13 @@ namespace HelpDesk.Controllers
                         existing.DataFechamento = null;
                     }
                 }
+                TempData["MensagemSucesso"] = "Chamado atualizado com sucesso!";
                 return RedirectToAction(nameof(Index));
             }
 
             ViewBag.StatusList = new List<string> { "Aberto", "Em Andamento", "Resolvido" };
             ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
+            ViewBag.CategoriaList = new List<string> { "Hardware", "Software", "Rede", "Acesso", "Outros" };
 
             return View(chamado);
         }
@@ -163,6 +167,7 @@ namespace HelpDesk.Controllers
             if (chamado != null)
             {
                 chamados.Remove(chamado);
+                TempData["MensagemSucesso"] = "Chamado excluído com sucesso!";
             }
             return RedirectToAction(nameof(Index));
         }
