@@ -1,16 +1,23 @@
 ﻿using HelpDesk.Models;
-using Microsoft.AspNetCore.Http;
+using HelpDesk.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace HelpDesk.Controllers
 {
     public class ChamadosController : Controller
     {
-        private static List<Chamado> chamados = new List<Chamado>();
-        private static int nextId = 1;
+        private readonly AppDbContext _context;
+
+        // CONSTRUTOR COM INJEÇÃO DO BANCO
+        public ChamadosController(AppDbContext context)
+        {
+            _context = context;
+        }
 
         // Helper method para verificar login
         private IActionResult CheckLogin()
@@ -27,23 +34,25 @@ namespace HelpDesk.Controllers
         }
 
         // GET: Chamados
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             var loginCheck = CheckLogin();
             if (loginCheck != null) return loginCheck;
 
-            // CHAMADOS URGENTES: Apenas os NÃO RESOLVIDOS com prioridade Urgente
-            var chamadosUrgentes = chamados
+            // BUSCAR DO BANCO
+            var chamadosUrgentes = await _context.Chamados
                 .Where(c => c.Prioridade == "Urgente" && c.Status != "Resolvido")
-                .ToList();
+                .ToListAsync();
+
+            var todosChamados = await _context.Chamados.ToListAsync();
 
             ViewBag.ChamadosUrgentes = chamadosUrgentes;
-            ViewBag.TotalChamados = chamados.Count;
-            ViewBag.ChamadosAbertos = chamados.Count(c => c.Status == "Aberto");
-            ViewBag.ChamadosEmAndamento = chamados.Count(c => c.Status == "Em Andamento");
-            ViewBag.ChamadosResolvidos = chamados.Count(c => c.Status == "Resolvido");
+            ViewBag.TotalChamados = todosChamados.Count;
+            ViewBag.ChamadosAbertos = todosChamados.Count(c => c.Status == "Aberto");
+            ViewBag.ChamadosEmAndamento = todosChamados.Count(c => c.Status == "Em Andamento");
+            ViewBag.ChamadosResolvidos = todosChamados.Count(c => c.Status == "Resolvido");
 
-            return View(chamados);
+            return View(todosChamados);
         }
 
         // GET: Chamados/Create
@@ -51,25 +60,24 @@ namespace HelpDesk.Controllers
         {
             ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
             ViewBag.CategoriaList = new List<string> { "Hardware", "Software", "Rede", "Acesso", "Outros" };
-
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Chamado chamado)
+        public async Task<IActionResult> Create(Chamado chamado)
         {
-            // REMOVER VALIDAÇÃO DO STATUS - será definido automaticamente
+            // REMOVER VALIDAÇÃO DO STATUS
             ModelState.Remove("Status");
 
             if (ModelState.IsValid)
             {
-                // DEFINIR STATUS AUTOMATICAMENTE COMO "Aberto"
-                chamado.Id = nextId++;
+                // DEFINIR STATUS AUTOMATICAMENTE E SALVAR NO BANCO
                 chamado.Status = "Aberto";
                 chamado.DataAbertura = DateTime.Now;
 
-                chamados.Add(chamado);
+                _context.Chamados.Add(chamado);
+                await _context.SaveChangesAsync();
 
                 TempData["MensagemSucesso"] = "Chamado criado com sucesso!";
                 return RedirectToAction(nameof(Index));
@@ -82,11 +90,12 @@ namespace HelpDesk.Controllers
         }
 
         // GET: Chamados/Edit/5
-        public IActionResult Edit(int? id)
+        public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
-            var chamado = chamados.FirstOrDefault(c => c.Id == id);
+            // BUSCAR DO BANCO
+            var chamado = await _context.Chamados.FindAsync(id);
             if (chamado == null) return NotFound();
 
             ViewBag.StatusList = new List<string> { "Aberto", "Em Andamento", "Resolvido" };
@@ -99,7 +108,7 @@ namespace HelpDesk.Controllers
         // POST: Chamados/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Chamado chamado)
+        public async Task<IActionResult> Edit(int id, Chamado chamado)
         {
             var loginCheck = CheckLogin();
             if (loginCheck != null) return loginCheck;
@@ -111,26 +120,48 @@ namespace HelpDesk.Controllers
 
             if (ModelState.IsValid)
             {
-                Chamado existing = chamados.FirstOrDefault(c => c.Id == chamado.Id);
-                if (existing != null)
+                try
                 {
-                    existing.Titulo = chamado.Titulo;
-                    existing.Descricao = chamado.Descricao;
-                    existing.Status = chamado.Status;
-                    existing.Prioridade = chamado.Prioridade;
-                    existing.Categoria = chamado.Categoria; // NOVO CAMPO
-                    existing.Responsavel = chamado.Responsavel;
-
-                    if (chamado.Status == "Resolvido" && existing.DataFechamento == null)
+                    // BUSCAR E ATUALIZAR NO BANCO
+                    var chamadoExistente = await _context.Chamados.FindAsync(id);
+                    if (chamadoExistente == null)
                     {
-                        existing.DataFechamento = DateTime.Now;
+                        return NotFound();
+                    }
+
+                    chamadoExistente.Titulo = chamado.Titulo;
+                    chamadoExistente.Descricao = chamado.Descricao;
+                    chamadoExistente.Status = chamado.Status;
+                    chamadoExistente.Prioridade = chamado.Prioridade;
+                    chamadoExistente.Categoria = chamado.Categoria;
+                    chamadoExistente.Responsavel = chamado.Responsavel;
+
+                    // DATA DE FECHAMENTO AUTOMÁTICA
+                    if (chamado.Status == "Resolvido" && chamadoExistente.DataFechamento == null)
+                    {
+                        chamadoExistente.DataFechamento = DateTime.Now;
                     }
                     else if (chamado.Status != "Resolvido")
                     {
-                        existing.DataFechamento = null;
+                        chamadoExistente.DataFechamento = null;
+                    }
+
+                    _context.Update(chamadoExistente);
+                    await _context.SaveChangesAsync();
+
+                    TempData["MensagemSucesso"] = "Chamado atualizado com sucesso!";
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ChamadoExists(chamado.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
                     }
                 }
-                TempData["MensagemSucesso"] = "Chamado atualizado com sucesso!";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -142,34 +173,40 @@ namespace HelpDesk.Controllers
         }
 
         // GET: Chamados/Delete/5
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int? id)
         {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
+            if (id == null) return NotFound();
 
-            Chamado chamado = chamados.FirstOrDefault(c => c.Id == id);
+            // BUSCAR DO BANCO
+            var chamado = await _context.Chamados
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (chamado == null)
             {
                 return NotFound();
             }
+
             return View(chamado);
         }
 
         // POST: Chamados/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
-
-            Chamado chamado = chamados.FirstOrDefault(c => c.Id == id);
+            // BUSCAR E EXCLUIR DO BANCO
+            var chamado = await _context.Chamados.FindAsync(id);
             if (chamado != null)
             {
-                chamados.Remove(chamado);
+                _context.Chamados.Remove(chamado);
+                await _context.SaveChangesAsync();
                 TempData["MensagemSucesso"] = "Chamado excluído com sucesso!";
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        private bool ChamadoExists(int id)
+        {
+            return _context.Chamados.Any(e => e.Id == id);
         }
     }
 }
