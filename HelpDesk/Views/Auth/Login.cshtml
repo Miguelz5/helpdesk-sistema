@@ -2,7 +2,7 @@
 
 @{
     ViewBag.Title = "Login - Sistema Help Desk";
-    Layout = null; // Não usar o layout padrão
+    Layout = null;
 }
 
 <!DOCTYPE html>
@@ -12,82 +12,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewBag.Title</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #6f42c1, #007bff);
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true">
 
-        .login-container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2);
-            width: 100%;
-            max-width: 400px;
-            padding: 30px;
-        }
-
-        .login-logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-            .login-logo h2 {
-                color: #6f42c1;
-                font-weight: bold;
-            }
-    </style>
 </head>
-<body>
+<body class="login-page">
     <div class="login-container">
-        <div class="login-logo">
-            <h2>Help Desk</h2>
-            <p class="text-muted">Área do Administrador</p>
+        <div class="login-header">
+            <div class="logo-icon">
+                <i class="fas fa-headset"></i>
+            </div>
+            <h2 class="page-title">Sistema Help Desk</h2>
+            <p class="text-muted">Área Restrita - Administradores</p>
         </div>
 
         @if (TempData["MensagemSucesso"] != null)
         {
-            <div class="alert alert-success">
+            <div class="alert alert-success alert-custom">
+                <i class="fas fa-check-circle me-2"></i>
                 @TempData["MensagemSucesso"]
             </div>
         }
 
         @if (ViewBag.MensagemErro != null)
-{
-    <div class="alert alert-danger">
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        @ViewBag.MensagemErro
-    </div>
-}
+        {
+            <div class="alert alert-danger alert-custom">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                @ViewBag.MensagemErro
+            </div>
+        }
 
         @using (Html.BeginForm("Login", "Auth", FormMethod.Post))
         {
             @Html.AntiForgeryToken()
 
-            <div class="form-group mb-3">
-                @Html.LabelFor(model => model.Email, new { @class = "form-label" })
-                @Html.TextBoxFor(model => model.Email, new { @class = "form-control", placeholder = "seu@email.com" })
-                @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">Email</label>
+                <div class="input-icon">
+                    <i class="fas fa-envelope"></i>
+                    @Html.TextBoxFor(model => model.Email, new {
+                    @class = "form-control",
+                                placeholder = "seu@email.com",
+                                required = "required"
+                                })
             </div>
+            @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger small" })
+        </div>
 
-            <div class="form-group mb-3">
-                @Html.LabelFor(model => model.Senha, new { @class = "form-label" })
-                @Html.PasswordFor(model => model.Senha, new { @class = "form-control", placeholder = "Sua senha" })
-                @Html.ValidationMessageFor(model => model.Senha, "", new { @class = "text-danger" })
+        <div class="mb-3">
+            <label asp-for="Senha" class="form-label">Senha</label>
+            <div class="input-icon">
+                <i class="fas fa-lock"></i>
+                @Html.PasswordFor(model => model.Senha, new {
+                                @class = "form-control",
+                                placeholder = "Sua senha",
+                                required = "required"
+                                })
             </div>
+            @Html.ValidationMessageFor(model => model.Senha, "", new { @class = "text-danger small" })
+        </div>
 
-            <button type="submit" class="btn btn-primary w-100 mb-3">Entrar</button>
+        <button type="submit" class="btn btn-primary-custom btn-login w-100 mb-3">
+            <i class="fas fa-sign-in-alt me-2"></i>Entrar no Sistema
+        </button>
 
-            @if (!ViewData.ModelState.IsValid)
-            {
-                <div class="alert alert-danger">
-                    @Html.ValidationSummary(true, "")
-                </div>
-            }
-        }
+        
+                }
+
+
+
+        <div class="login-footer">
+            <i class="fas fa-shield-alt me-1"></i>
+            Sistema Seguro - Desenvolvido para Help Desk
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

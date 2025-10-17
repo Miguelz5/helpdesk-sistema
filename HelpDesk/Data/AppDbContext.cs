@@ -9,6 +9,7 @@ namespace HelpDesk.Data
 
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Chamado> Chamados { get; set; }
+        public DbSet<Faq> Faqs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

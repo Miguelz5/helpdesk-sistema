@@ -1,4 +1,4 @@
-﻿ @model IEnumerable<HelpDesk.Models.Chamado>
+﻿@model IEnumerable<HelpDesk.Models.Chamado>
 
 @{
     ViewBag.Title = "Sistema Help Desk - Dashboard";
@@ -82,7 +82,7 @@
         </div>
     </div>
 
-    <!-- Gráfico -->
+    <!-- Gráfico e Estatísticas por Período -->
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="card">
@@ -99,43 +99,80 @@
                 </div>
             </div>
         </div>
+
+        <!-- NOVA SEÇÃO: Estatísticas por Período -->
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-white border-0 py-3">
                     <h5 class="card-title mb-0 section-header">
-                        <i class="fas fa-info-circle section-icon"></i>
-                        Resumo do Sistema
+                        <i class="fas fa-calendar-alt section-icon"></i>
+                        Estatísticas por Período
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-muted">Taxa de Resolução</span>
-                        <strong class="text-success">
-                            @{
-                                var taxaResolucao = ViewBag.TotalChamados > 0 ? (double)ViewBag.ChamadosResolvidos / ViewBag.TotalChamados * 100 : 0;
-                            }
-                            @taxaResolucao.ToString("F1")%
-                        </strong>
-                    </div>
-                    <div class="progress mb-4" style="height: 8px;">
-                        <div class="progress-bar bg-success" style="width: @(taxaResolucao)%"></div>
-                    </div>
-                    <div class="row text-center">
-                        <div class="col-4">
-                            <div class="border-end">
-                                <h4 class="text-warning mb-0">@ViewBag.ChamadosAbertos</h4>
-                                <small class="text-muted">Abertos</small>
+                    <!-- HOJE -->
+                    <div class="period-stats mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0 text-primary">
+                                <i class="fas fa-sun me-1"></i>Hoje
+                            </h6>
+                            <small class="text-muted">@DateTime.Now.ToString("dd/MM/yyyy")</small>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h4 class="text-warning mb-0">@ViewBag.ChamadosHoje</h4>
+                                    <small class="text-muted">Recebidos</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-success mb-0">@ViewBag.ResolvidosHoje</h4>
+                                <small class="text-muted">Resolvidos</small>
                             </div>
                         </div>
-                        <div class="col-4">
-                            <div class="border-end">
-                                <h4 class="text-info mb-0">@ViewBag.ChamadosEmAndamento</h4>
-                                <small class="text-muted">Em Andamento</small>
+                    </div>
+
+                    <!-- ESTA SEMANA -->
+                    <div class="period-stats mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0 text-info">
+                                <i class="fas fa-calendar-week me-1"></i>Esta Semana
+                            </h6>
+                            <small class="text-muted">Semana atual</small>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h4 class="text-warning mb-0">@ViewBag.ChamadosSemana</h4>
+                                    <small class="text-muted">Recebidos</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-success mb-0">@ViewBag.ResolvidosSemana</h4>
+                                <small class="text-muted">Resolvidos</small>
                             </div>
                         </div>
-                        <div class="col-4">
-                            <h4 class="text-success mb-0">@ViewBag.ChamadosResolvidos</h4>
-                            <small class="text-muted">Resolvidos</small>
+                    </div>
+
+                    <!-- ESTE MÊS -->
+                    <div class="period-stats">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0 text-success">
+                                <i class="fas fa-calendar me-1"></i>Este Mês
+                            </h6>
+                            <small class="text-muted">@DateTime.Now.ToString("MMMM")</small>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h4 class="text-warning mb-0">@ViewBag.ChamadosMes</h4>
+                                    <small class="text-muted">Recebidos</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-success mb-0">@ViewBag.ResolvidosMes</h4>
+                                <small class="text-muted">Resolvidos</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -143,7 +180,7 @@
         </div>
     </div>
 
-    <!-- Chamados Urgentes -->
+    <!-- Chamados Urgentes - PARTE QUE FOI RESTAURADA -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
@@ -162,6 +199,7 @@
                                     <tr>
                                         <th><i class="fas fa-heading me-1"></i> Título</th>
                                         <th><i class="fas fa-align-left me-1"></i> Descrição</th>
+                                        <th><i class="fas fa-tag me-1"></i> Categoria</th>
                                         <th><i class="fas fa-calendar me-1"></i> Data de Abertura</th>
                                         <th><i class="fas fa-flag me-1"></i> Status</th>
                                         <th><i class="fas fa-cogs me-1"></i> Ações</th>
@@ -173,8 +211,30 @@
                                         <tr class="border-start border-danger border-3">
                                             <td><strong>@item.Titulo</strong></td>
                                             <td>@item.Descricao</td>
-                                            <td>@item.DataAbertura.ToString("dd/MM/yyyy HH:mm")</td>
-                                            <td><span class="badge badge-warning">@item.Status</span></td>
+                                            <td>
+                                                <span class="badge" style="background-color:
+                                                            @(item.Categoria == "Hardware" ? "#6f42c1" :
+                                                                                                                          item.Categoria == "Software" ? "#0d6efd" :
+                                                                                                                          item.Categoria == "Rede" ? "#198754" :
+                                                                                                                          item.Categoria == "Acesso" ? "#fd7e14" : "#6c757d"); color: white;">
+                                            @item.Categoria
+                                        </span>
+                                    </td>
+                                    <td>@item.DataAbertura.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        @if (item.Status == "Aberto")
+                                                {
+                                                    <span class="badge badge-warning status-badge">@item.Status</span>
+                                                }
+                                                else if (item.Status == "Em Andamento")
+                                                {
+                                                    <span class="badge badge-info status-badge">@item.Status</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-success status-badge">@item.Status</span>
+                                                }
+                                            </td>
                                             <td>
                                                 @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @class = "btn btn-outline-primary btn-sm me-1" })
                                                 @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @class = "btn btn-outline-danger btn-sm" })
@@ -197,7 +257,7 @@
         </div>
     </div>
 
-    <!-- Todos os Chamados -->
+    <!-- Todos os Chamados - PARTE QUE FOI RESTAURADA -->
     <div class="row">
         <div class="col-12">
             <div class="table-modern">
@@ -212,7 +272,7 @@
                                 <tr>
                                     <th><i class="fas fa-heading me-1"></i> Título</th>
                                     <th><i class="fas fa-align-left me-1"></i> Descrição</th>
-                                    <th><i class="fas fa-tag me-1"></i> Categoria</th> <!-- NOVA COLUNA -->
+                                    <th><i class="fas fa-tag me-1"></i> Categoria</th>
                                     <th><i class="fas fa-calendar me-1"></i> Data de Abertura</th>
                                     <th><i class="fas fa-flag me-1"></i> Status</th>
                                     <th><i class="fas fa-sort-amount-up me-1"></i> Prioridade</th>
@@ -228,16 +288,16 @@
                                         <td>@item.Descricao</td>
                                         <td>
                                             <span class="badge" style="background-color:
-                        @(item.Categoria == "Hardware" ? "#6f42c1" :
-                                                                                      item.Categoria == "Software" ? "#0d6efd" :
-                                                                                      item.Categoria == "Rede" ? "#198754" :
-                                                                                      item.Categoria == "Acesso" ? "#fd7e14" : "#6c757d"); color: white;">
+                                                    @(item.Categoria == "Hardware" ? "#6f42c1" :
+                                                                                                                  item.Categoria == "Software" ? "#0d6efd" :
+                                                                                                                  item.Categoria == "Rede" ? "#198754" :
+                                                                                                                  item.Categoria == "Acesso" ? "#fd7e14" : "#6c757d"); color: white;">
                                             @item.Categoria
                                         </span>
                                     </td>
                                     <td>@item.DataAbertura.ToString("dd/MM/yyyy HH:mm")</td>
                                     <td>
-                                            @if (item.Status == "Aberto")
+                                        @if (item.Status == "Aberto")
                                             {
                                                 <span class="badge badge-warning status-badge">@item.Status</span>
                                             }
@@ -284,25 +344,16 @@
     </div>
 </div>
 
-<!-- Script específico para esta página -->
+<!-- Script do gráfico -->
 <script>
-    // Aguardar o DOM e Chart.js carregarem
     document.addEventListener('DOMContentLoaded', function() {
-        // Pequeno delay para garantir que Chart.js carregou
         setTimeout(function() {
             const ctx = document.getElementById('statusChart');
 
-            if (!ctx) {
-                console.error('Canvas não encontrado');
+            if (!ctx || typeof Chart === 'undefined') {
+                console.error('Canvas ou Chart.js não encontrado');
                 return;
             }
-
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js não carregou');
-                return;
-            }
-
-            console.log('Criando gráfico...');
 
             try {
                 const statusChart = new Chart(ctx, {
@@ -337,41 +388,16 @@
                                     padding: 20,
                                     usePointStyle: true,
                                     font: {
-                                        size: 12,
-                                        family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-                                    }
-                                }
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                titleFont: {
-                                    size: 13
-                                },
-                                bodyFont: {
-                                    size: 13
-                                },
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.raw || 0;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                        return `${label}: ${value} (${percentage}%)`;
+                                        size: 12
                                     }
                                 }
                             }
                         },
-                        cutout: '65%',
-                        animation: {
-                            animateScale: true,
-                            animateRotate: true
-                        }
+                        cutout: '65%'
                     }
                 });
-
-                console.log('✅ Gráfico criado com sucesso!');
             } catch (error) {
-                console.error('❌ Erro ao criar gráfico:', error);
+                console.error('Erro ao criar gráfico:', error);
             }
         }, 100);
     });

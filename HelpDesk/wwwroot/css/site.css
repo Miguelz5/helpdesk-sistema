@@ -406,3 +406,90 @@ body {
         border-color: #0d6efd;
         color: white;
     }
+
+/* ===== ESTILOS ESPECÍFICOS PARA LOGIN ===== */
+
+/* FORÇAR o background do login */
+body.login-page {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+    height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 20px !important;
+}
+
+.login-container {
+    background: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    padding: 40px !important;
+}
+
+.login-header {
+    text-align: center !important;
+    margin-bottom: 35px !important;
+}
+
+.logo-icon {
+    background: linear-gradient(135deg, #4f46e5, #6f42c1) !important;
+    width: 80px !important;
+    height: 80px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto 20px !important;
+}
+
+    .logo-icon i {
+        font-size: 2rem !important;
+        color: white !important;
+    }
+
+.login-footer {
+    text-align: center !important;
+    margin-top: 25px !important;
+    padding-top: 20px !important;
+    border-top: 1px solid #e9ecef !important;
+    color: #6c757d !important;
+    font-size: 0.85rem !important;
+}
+
+/* Input com ícone */
+.input-icon {
+    position: relative !important;
+}
+
+    .input-icon .form-control {
+        padding-left: 45px !important;
+    }
+
+    .input-icon i {
+        position: absolute !important;
+        left: 15px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        color: #6c757d !important;
+        z-index: 3 !important;
+    }
+
+.btn-login {
+    padding: 12px 20px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    width: 100% !important;
+}
+
+/* Garantir que as classes do login tenham prioridade */
+body.login-page .login-container {
+    background: white !important;
+}
+
+body.login-page .page-title {
+    color: #1f2937 !important;
+    text-align: center !important;
+}

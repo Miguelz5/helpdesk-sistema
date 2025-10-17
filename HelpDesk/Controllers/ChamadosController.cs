@@ -39,13 +39,50 @@ namespace HelpDesk.Controllers
             var loginCheck = CheckLogin();
             if (loginCheck != null) return loginCheck;
 
-            // BUSCAR DO BANCO
+            // DATAS PARA OS PERÍODOS
+            var hoje = DateTime.Today;
+            var inicioSemana = hoje.AddDays(-(int)hoje.DayOfWeek);
+            var inicioMes = new DateTime(hoje.Year, hoje.Month, 1);
+
+            // BUSCAR DO BANCO - ESTATÍSTICAS GERAIS
             var chamadosUrgentes = await _context.Chamados
                 .Where(c => c.Prioridade == "Urgente" && c.Status != "Resolvido")
                 .ToListAsync();
 
             var todosChamados = await _context.Chamados.ToListAsync();
 
+            // BUSCAR DO BANCO - ESTATÍSTICAS POR PERÍODO
+            ViewBag.ChamadosHoje = await _context.Chamados
+                .Where(c => c.DataAbertura.Date == hoje)
+                .CountAsync();
+
+            ViewBag.ResolvidosHoje = await _context.Chamados
+                .Where(c => c.DataFechamento.HasValue &&
+                           c.DataFechamento.Value.Date == hoje &&
+                           c.Status == "Resolvido")
+                .CountAsync();
+
+            ViewBag.ChamadosSemana = await _context.Chamados
+                .Where(c => c.DataAbertura >= inicioSemana)
+                .CountAsync();
+
+            ViewBag.ResolvidosSemana = await _context.Chamados
+                .Where(c => c.DataFechamento.HasValue &&
+                           c.DataFechamento.Value >= inicioSemana &&
+                           c.Status == "Resolvido")
+                .CountAsync();
+
+            ViewBag.ChamadosMes = await _context.Chamados
+                .Where(c => c.DataAbertura >= inicioMes)
+                .CountAsync();
+
+            ViewBag.ResolvidosMes = await _context.Chamados
+                .Where(c => c.DataFechamento.HasValue &&
+                           c.DataFechamento.Value >= inicioMes &&
+                           c.Status == "Resolvido")
+                .CountAsync();
+
+            // VIEWBAGS EXISTENTES
             ViewBag.ChamadosUrgentes = chamadosUrgentes;
             ViewBag.TotalChamados = todosChamados.Count;
             ViewBag.ChamadosAbertos = todosChamados.Count(c => c.Status == "Aberto");
@@ -55,6 +92,7 @@ namespace HelpDesk.Controllers
             return View(todosChamados);
         }
 
+        // ... (restante do seu controller permanece igual)
         // GET: Chamados/Create
         public IActionResult Create()
         {
