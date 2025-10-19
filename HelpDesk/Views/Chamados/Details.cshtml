@@ -1,0 +1,395 @@
+﻿@model HelpDesk.Models.Chamado
+
+@{
+    ViewBag.Title = "Detalhes do Chamado";
+}
+
+<div class="container-fluid mt-4">
+    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="page-title">
+                <i class="fas fa-eye me-2 text-primary"></i>
+                Detalhes do Chamado
+            </h2>
+            <p class="text-muted">
+                <i class="fas fa-hashtag me-1"></i>Chamado #@Model.NumeroChamado
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group">
+                @Html.ActionLink(" Voltar", "Index", null, new { @class = "btn btn-secondary" })
+                @Html.ActionLink(" Editar", "Edit", new { id = Model.Id }, new { @class = "btn btn-primary" })
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Principal -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 section-header">
+                        <i class="fas fa-info-circle section-icon"></i>
+                        Informações do Chamado
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Título -->
+                    <div class="mb-4">
+                        <h4 class="text-primary">@Model.Titulo</h4>
+                        <p class="text-muted mb-0">Título do chamado</p>
+                    </div>
+
+                    <!-- Descrição -->
+                    <div class="mb-4">
+                        <h6 class="text-dark mb-2">Descrição:</h6>
+                        <div class="border rounded p-3 bg-light">
+                            @Model.Descricao
+                        </div>
+                    </div>
+
+                    <!-- Informações em Grid -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6 class="text-dark mb-1">Categoria:</h6>
+                                <span class="badge" style="background-color:
+                                    @(Model.Categoria == "Hardware" ? "#6f42c1" :
+                                                                                          Model.Categoria == "Software" ? "#0d6efd" :
+                                                                                          Model.Categoria == "Rede" ? "#198754" :
+                                                                                          Model.Categoria == "Acesso" ? "#fd7e14" : "#6c757d"); color: white; font-size: 0.9rem;">
+                                    @Model.Categoria
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6 class="text-dark mb-1">Prioridade:</h6>
+                                @if (Model.Prioridade == "Urgente")
+                                {
+                                    <span class="badge bg-danger">@Model.Prioridade</span>
+                                }
+                                else if (Model.Prioridade == "Alta")
+                                {
+                                    <span class="badge bg-warning">@Model.Prioridade</span>
+                                }
+                                else if (Model.Prioridade == "Média")
+                                {
+                                    <span class="badge bg-info">@Model.Prioridade</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@Model.Prioridade</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sistema de Comentários -->
+            <div class="card mt-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 section-header">
+                        <i class="fas fa-comments section-icon"></i>
+                        Histórico de Conversa
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Área de Mensagens -->
+                    <div class="chat-container" style="height: 400px; overflow-y: auto; padding: 20px; background: #f8f9fa;">
+
+                        <!-- Mensagem Inicial do Chamado -->
+                        <div class="d-flex justify-content-start mb-4">
+                            <div class="message-bubble user-message">
+                                <div class="message-header">
+                                    <strong>Usuário</strong>
+                                    <small class="text-muted">@Model.DataAbertura.ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+                                <div class="message-content">
+                                    @Model.Descricao
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Comentários/Respostas -->
+                        @foreach (var comentario in Model.Comentarios)
+                        {
+                            @if (comentario.EhAdministrador)
+                            {
+                                <!-- Mensagem do ADMIN (à direita) -->
+                                <div class="d-flex justify-content-end mb-4">
+                                    <div class="message-bubble admin-message">
+                                        <div class="message-header">
+                                            <strong>@comentario.Autor</strong>
+                                            <small class="text-muted">@comentario.DataCriacao.ToString("dd/MM/yyyy HH:mm")</small>
+                                        </div>
+                                        <div class="message-content">
+                                            @comentario.Mensagem
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <!-- Mensagem do USUÁRIO (à esquerda) -->
+                                <div class="d-flex justify-content-start mb-4">
+                                    <div class="message-bubble user-message">
+                                        <div class="message-header">
+                                            <strong>@comentario.Autor</strong>
+                                            <small class="text-muted">@comentario.DataCriacao.ToString("dd/MM/yyyy HH:mm")</small>
+                                        </div>
+                                        <div class="message-content">
+                                            @comentario.Mensagem
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+
+                        @if (!Model.Comentarios.Any())
+                        {
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-comments fa-3x mb-3"></i>
+                                <p>Nenhuma mensagem ainda.<br>Seja o primeiro a comentar!</p>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Formulário de Novo Comentário -->
+                    <div class="card-footer bg-white border-top">
+                        @if (string.IsNullOrEmpty(Model.Responsavel))
+                        {
+                            <div class="alert alert-warning text-center">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Atribua este chamado para iniciar a conversa
+                            </div>
+                        }
+                        else if (Model.Status == "Resolvido")
+                        {
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-lock me-2"></i>
+                                Este chamado foi resolvido e está fechado para novos comentários
+                            </div>
+                        }
+                        else
+                        {
+                            using (Html.BeginForm("AdicionarComentario", "Chamados", FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="chamadoId" value="@Model.Id" />
+
+                                <div class="input-group">
+                                    <textarea name="mensagem" class="form-control"
+                                      placeholder="Digite sua mensagem..."
+                                      rows="2"
+                                      style="resize: none;"
+                                      required></textarea>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Pressione Enter para enviar</small>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar com Metadados -->
+        <div class="col-lg-4">
+            <!-- Status Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="card-title mb-0 section-header">
+                        <i class="fas fa-flag section-icon"></i>
+                        Status do Chamado
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    @if (Model.Status == "Aberto")
+                    {
+                        <span class="badge bg-warning" style="font-size: 1.1rem; padding: 10px 20px;">@Model.Status</span>
+                    }
+                    else if (Model.Status == "Em Andamento")
+                    {
+                        <span class="badge bg-info" style="font-size: 1.1rem; padding: 10px 20px;">@Model.Status</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success" style="font-size: 1.1rem; padding: 10px 20px;">@Model.Status</span>
+                    }
+
+                    <div class="mt-3">
+                        <small class="text-muted">Atualizado em: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações de Tempo -->
+            <div class="card mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="card-title mb-0 section-header">
+                        <i class="fas fa-clock section-icon"></i>
+                        Datas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Aberto em:</strong><br>
+                        <span class="text-muted">@Model.DataAbertura.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+
+                    @if (Model.DataFechamento.HasValue)
+                    {
+                        <div class="mb-3">
+                            <strong>Fechado em:</strong><br>
+                            <span class="text-muted">@Model.DataFechamento.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+
+                        <div class="mb-0">
+                            <strong>Tempo para resolução:</strong><br>
+                            <span class="text-success">
+                                @{
+                                    var tempoResolucao = Model.DataFechamento.Value - Model.DataAbertura;
+                                    var dias = tempoResolucao.Days;
+                                    var horas = tempoResolucao.Hours;
+                                    var minutos = tempoResolucao.Minutes;
+
+                                    if (dias > 0)
+                                    {
+                                        <text>@dias dia@(dias > 1 ? "s" : ""), @horas hora@(horas > 1 ? "s" : "")</text>
+                                    }
+                                    else if (horas > 0)
+                                    {
+                                        <text>@horas hora@(horas > 1 ? "s" : ""), @minutos minuto@(minutos > 1 ? "s" : "")</text>
+                                    }
+                                    else
+                                    {
+                                        <text>@minutos minuto@(minutos > 1 ? "s" : "")</text>
+                                    }
+                                }
+                            </span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-0">
+                            <strong>Tempo em aberto:</strong><br>
+                            <span class="text-warning">
+                                @{
+                                    var tempoAberto = DateTime.Now - Model.DataAbertura;
+                                    var dias = tempoAberto.Days;
+                                    var horas = tempoAberto.Hours;
+
+                                    if (dias > 0)
+                                    {
+                                        <text>@dias dia@(dias > 1 ? "s" : ""), @horas hora@(horas > 1 ? "s" : "")</text>
+                                    }
+                                    else
+                                    {
+                                        <text>@horas hora@(horas > 1 ? "s" : "")</text>
+                                    }
+                                }
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Responsável -->
+            <div class="card">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="card-title mb-0 section-header">
+                        <i class="fas fa-user section-icon"></i>
+                        Responsável
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @{
+                        var usuarioJaEhResponsavel = Model.Responsavel == ViewBag.NomeUsuarioLogado;
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.Responsavel))
+                    {
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar-circle me-3">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <strong>@Model.Responsavel</strong>
+                                <br>
+                                <small class="text-muted">Responsável pelo chamado</small>
+                            </div>
+                        </div>
+
+                        @if (usuarioJaEhResponsavel)
+                        {
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Você é o responsável por este chamado
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted mb-3">
+                            <i class="fas fa-user-slash fa-2x mb-2"></i>
+                            <p>Nenhum responsável atribuído</p>
+                        </div>
+                    }
+
+                    @if ((string.IsNullOrEmpty(Model.Responsavel) || !usuarioJaEhResponsavel) && Model.Status != "Resolvido")
+                    {
+                        using (Html.BeginForm("AtribuirParaMim", "Chamados", new { id = Model.Id }, FormMethod.Post))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success w-100 mb-2">
+                                <i class="fas fa-user-check me-2"></i>Atribuir para Mim
+                            </button>
+                        }
+
+                        <!-- Botão Atribuir para Outro Admin -->
+                        <div class="mb-3">
+                            @using (Html.BeginForm("AtribuirParaAdmin", "Chamados", new { id = Model.Id }, FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+
+                                <label class="form-label fw-bold mb-2">Atribuir para outro admin:</label>
+                                <div class="input-group">
+                                    <select name="adminId" class="form-select" required>
+                                        <option value="">Selecione um admin...</option>
+                                        @foreach (var admin in ViewBag.Admins)
+                                        {
+                                            <option value="@admin.Id">@admin.Nome</option>
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        <i class="fas fa-user-plus"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Escolha um administrador e clique no ícone</small>
+                            }
+                        </div>
+                    }
+                    else if (Model.Status == "Resolvido")
+                    {
+                        <div class="alert alert-secondary text-center">
+                            <i class="fas fa-lock me-2"></i>
+                            Chamado resolvido - não é possível alterar a atribuição
+                        </div>
+                    }
+                </div>
+            </div>
+
+                    <!-- Modal para Atribuir para Outro Admin -->
+                    <div class="modal fade" id="atribuirAdminModal" tabindex="-1" aria-hidden="true">                   
+                                        </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+     

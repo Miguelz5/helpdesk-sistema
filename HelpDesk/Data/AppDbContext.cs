@@ -10,7 +10,7 @@ namespace HelpDesk.Data
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Chamado> Chamados { get; set; }
         public DbSet<Faq> Faqs { get; set; }
-
+        public DbSet<Comentario> Comentarios { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configurações opcionais para as tabelas

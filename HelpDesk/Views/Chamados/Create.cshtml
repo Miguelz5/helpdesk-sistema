@@ -91,17 +91,7 @@
                 </div>
             </div>
 
-            <div class="form-group mb-3">
-                @Html.LabelFor(model => model.Responsavel, htmlAttributes: new { @class = "control-label fw-bold" })
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-user"></i></span>
-                    @Html.EditorFor(model => model.Responsavel, new { htmlAttributes = new { 
-                        @class = "form-control" + (ViewData.ModelState["Responsavel"]?.Errors?.Count > 0 ? " is-invalid" : ""),
-                        placeholder = "Nome do responsável"
-                    } })
-                </div>
-                @Html.ValidationMessageFor(model => model.Responsavel, "", new { @class = "text-danger small fw-bold" })
-            </div>
+           
 
             <div class="form-group mt-4">
                 <button type="submit" class="btn btn-success">

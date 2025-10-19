@@ -9,7 +9,7 @@
         <div class="col-lg-10">
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Editar Chamado #@Model.Id</h4>
+                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Editar Chamado #@Model.NumeroChamado</h4>
                 </div>
                 <div class="card-body p-4">
                     @using (Html.BeginForm())
@@ -42,33 +42,35 @@
                             </div>
                         </div>
 
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                @Html.LabelFor(model => model.Categoria, htmlAttributes: new { @class = "form-label" })
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                                    @Html.DropDownListFor(model => model.Categoria,
+                                    new SelectList(ViewBag.CategoriaList),
+                                                                "Selecione a categoria",
+                                                                new { @class = "form-control", required = "required" })
+                            </div>
+                            @Html.ValidationMessageFor(model => model.Categoria, "", new { @class = "text-danger small" })
+                        </div>
 
-                        <div class="form-group">
-                            @Html.LabelFor(model => model.Categoria, htmlAttributes: new { @class = "control-label col-md-2" })
-                            <div class="col-md-10">
-                                @Html.DropDownListFor(model => model.Categoria,
-                                new SelectList(ViewBag.CategoriaList),
-                                                        "Selecione a categoria",
-                                                        new { @class = "form-control", required = "required" } )
-                            @Html.ValidationMessageFor(model => model.Categoria, "", new { @class = "text-danger" })
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.Prioridade, htmlAttributes: new { @class = "form-label" })
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-exclamation-triangle"></i></span>
+                                @Html.DropDownListFor(model => model.Prioridade,
+                                                                new SelectList(ViewBag.PrioridadeList),
+                                                                "Selecione a prioridade",
+                                                                new { @class = "form-control", required = "required" })
+                            </div>
+                            @Html.ValidationMessageFor(model => model.Prioridade, "", new { @class = "text-danger small" })
                         </div>
                     </div>
 
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <h5 class="section-title"><i class="fas fa-cogs me-2"></i>Configurações do Chamado</h5>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                @Html.LabelFor(model => model.Prioridade, htmlAttributes: new { @class = "form-label" })
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-exclamation-triangle"></i></span>
-                                    @Html.DropDownListFor(model => model.Prioridade,
-                                    new SelectList(ViewBag.PrioridadeList),
-                                                                "Selecione a prioridade",
-                                                                new { @class = "form-control" })
-                            </div>
-                            @Html.ValidationMessageFor(model => model.Prioridade, "", new { @class = "text-danger small" })
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5 class="section-title"><i class="fas fa-cogs me-2"></i>Configurações do Chamado</h5>
                         </div>
 
                         <div class="col-md-6 mb-3">
@@ -78,18 +80,9 @@
                                 @Html.DropDownListFor(model => model.Status,
                                                                 new SelectList(ViewBag.StatusList),
                                                                 "Selecione o status",
-                                                                new { @class = "form-control" })
+                                                                new { @class = "form-control", required = "required" })
                             </div>
                             @Html.ValidationMessageFor(model => model.Status, "", new { @class = "text-danger small" })
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            @Html.LabelFor(model => model.Responsavel, htmlAttributes: new { @class = "form-label" })
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                @Html.EditorFor(model => model.Responsavel, new { htmlAttributes = new { @class = "form-control", placeholder = "Nome do responsável" } })
-                            </div>
-                            @Html.ValidationMessageFor(model => model.Responsavel, "", new { @class = "text-danger small" })
                         </div>
 
                         <div class="col-md-6 mb-3">
@@ -110,6 +103,14 @@
                                     </div>
                                 </div>
                             }
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Número do Chamado</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                                    <input type="text" class="form-control" value="@Model.NumeroChamado" disabled>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="row mt-4">
@@ -117,8 +118,12 @@
                                 <div class="d-flex justify-content-between">
                                     @Html.ActionLink(" Voltar", "Index", "Chamados", null, new { @class = "btn btn-secondary" })
                                     <div>
-                                        <button type="reset" class="btn btn-outline-secondary me-2"><i class="fas fa-redo me-1"></i> Limpar</button>
-                                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Salvar Alterações</button>
+                                        <button type="reset" class="btn btn-outline-secondary me-2">
+                                            <i class="fas fa-redo me-1"></i> Limpar
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-1"></i> Salvar Alterações
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -129,4 +134,3 @@
         </div>
     </div>
 </div>
-

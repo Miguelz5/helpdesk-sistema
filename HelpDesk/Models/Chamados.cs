@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace HelpDesk.Models
@@ -7,17 +8,18 @@ namespace HelpDesk.Models
     {
         public int Id { get; set; }
 
+        public string NumeroChamado { get; set; } // SEM [Required]
+
         [Required(ErrorMessage = "O título é obrigatório")]
         public string Titulo { get; set; }
 
         [Required(ErrorMessage = "A descrição é obrigatória")]
         public string Descricao { get; set; }
 
-        public DateTime DataAbertura { get; set; }
+        public DateTime DataAbertura { get; set; } // SEM [Required]
         public DateTime? DataFechamento { get; set; }
 
-        // REMOVA O [Required] - status será definido automaticamente
-        public string Status { get; set; }
+        public string Status { get; set; } // SEM [Required]
 
         [Required(ErrorMessage = "A prioridade é obrigatória")]
         public string Prioridade { get; set; }
@@ -25,6 +27,8 @@ namespace HelpDesk.Models
         [Required(ErrorMessage = "A categoria é obrigatória")]
         public string Categoria { get; set; }
 
-        public string Responsavel { get; set; }
+        public string Responsavel { get; set; } // SEM [Required]
+
+        public ICollection<Comentario> Comentarios { get; set; } = new List<Comentario>();
     }
 }

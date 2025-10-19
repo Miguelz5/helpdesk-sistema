@@ -197,6 +197,7 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
+                                        <th><i class="fas fa-hashtag me-1"></i> Nº Chamado</th> <!-- NOVA COLUNA -->
                                         <th><i class="fas fa-heading me-1"></i> Título</th>
                                         <th><i class="fas fa-align-left me-1"></i> Descrição</th>
                                         <th><i class="fas fa-tag me-1"></i> Categoria</th>
@@ -209,6 +210,9 @@
                                     @foreach (var item in ViewBag.ChamadosUrgentes)
                                     {
                                         <tr class="border-start border-danger border-3">
+                                            <td>
+                                                <strong class="text-primary">#@item.NumeroChamado</strong>
+                                            </td>
                                             <td><strong>@item.Titulo</strong></td>
                                             <td>@item.Descricao</td>
                                             <td>
@@ -236,6 +240,7 @@
                                                 }
                                             </td>
                                             <td>
+                                                @Html.ActionLink("Visualizar", "Details", new { id = item.Id }, new { @class = "btn btn-info btn-sm me-1" })
                                                 @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @class = "btn btn-outline-primary btn-sm me-1" })
                                                 @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @class = "btn btn-outline-danger btn-sm" })
                                             </td>
@@ -270,6 +275,7 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
+                                    <th><i class="fas fa-hashtag me-1"></i> Nº Chamado</th> <!-- NOVA COLUNA -->
                                     <th><i class="fas fa-heading me-1"></i> Título</th>
                                     <th><i class="fas fa-align-left me-1"></i> Descrição</th>
                                     <th><i class="fas fa-tag me-1"></i> Categoria</th>
@@ -284,6 +290,9 @@
                                 @foreach (var item in Model)
                                 {
                                     <tr>
+                                        <td>
+                                            <strong class="text-primary">#@item.NumeroChamado</strong>
+                                        </td>
                                         <td><strong>@item.Titulo</strong></td>
                                         <td>@item.Descricao</td>
                                         <td>
@@ -330,6 +339,7 @@
                                         </td>
                                         <td>@item.Responsavel</td>
                                         <td>
+                                            @Html.ActionLink("Visualizar", "Details", new { id = item.Id }, new { @class = "btn btn-info btn-sm me-1" })
                                             @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @class = "btn btn-outline-primary btn-sm me-1" })
                                             @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @class = "btn btn-outline-danger btn-sm" })
                                         </td>
