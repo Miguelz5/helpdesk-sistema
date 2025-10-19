@@ -41,7 +41,9 @@ namespace HelpDesk.Controllers
 
             // DATAS PARA OS PERÍODOS
             var hoje = DateTime.Today;
-            var inicioSemana = hoje.AddDays(-(int)hoje.DayOfWeek);
+
+            // 🔥 SOLUÇÃO SIMPLES E INFALÍVEL
+            var inicioSemana = hoje.AddDays(-6); // ÚLTIMOS 7 DIAS (incluindo hoje)
             var inicioMes = new DateTime(hoje.Year, hoje.Month, 1);
 
             // BUSCAR DO BANCO - ESTATÍSTICAS GERAIS
@@ -59,6 +61,26 @@ namespace HelpDesk.Controllers
             ViewBag.ResolvidosHoje = await _context.Chamados
                 .Where(c => c.DataFechamento.HasValue &&
                            c.DataFechamento.Value.Date == hoje &&
+                           c.Status == "Resolvido")
+                .CountAsync();
+
+            ViewBag.ChamadosSemana = await _context.Chamados
+                .Where(c => c.DataAbertura >= inicioSemana)
+                .CountAsync();
+
+            ViewBag.ResolvidosSemana = await _context.Chamados
+                .Where(c => c.DataFechamento.HasValue &&
+                           c.DataFechamento.Value >= inicioSemana &&
+                           c.Status == "Resolvido")
+                .CountAsync();
+
+            ViewBag.ChamadosMes = await _context.Chamados
+                .Where(c => c.DataAbertura >= inicioMes)
+                .CountAsync();
+
+            ViewBag.ResolvidosMes = await _context.Chamados
+                .Where(c => c.DataFechamento.HasValue &&
+                           c.DataFechamento.Value >= inicioMes &&
                            c.Status == "Resolvido")
                 .CountAsync();
 
@@ -85,9 +107,8 @@ namespace HelpDesk.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Chamado chamado)
         {
-            // 🔥 REMOVER validações desnecessárias
             ModelState.Remove("Status");
-            ModelState.Remove("NumeroChamado"); // 🔥 NOVA LINHA IMPORTANTE!
+            ModelState.Remove("NumeroChamado");
             ModelState.Remove("DataAbertura");
             ModelState.Remove("DataFechamento");
             ModelState.Remove("Responsavel");
@@ -95,11 +116,10 @@ namespace HelpDesk.Controllers
 
             if (ModelState.IsValid)
             {
-                // GERAR NÚMERO DO CHAMADO AUTOMATICAMENTE
                 chamado.NumeroChamado = GerarNumeroChamado();
                 chamado.Status = "Aberto";
-                chamado.DataAbertura = DateTime.Now;
-                chamado.Responsavel = ""; // Iniciar vazio
+                chamado.DataAbertura = DateTime.UtcNow.AddHours(-3); // Ajuste para seu fuso horário
+                chamado.Responsavel = "";
 
                 _context.Chamados.Add(chamado);
                 await _context.SaveChangesAsync();
