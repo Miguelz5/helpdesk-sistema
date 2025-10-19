@@ -52,26 +52,4 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Login}/{id?}");
 
-/// REMOVA O BLOCO QUE CRIA USUÁRIO PADRÃO (ou comente)
-/*
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // Adicionar usuário admin padrão para teste
-    if (!context.Usuarios.Any())
-    {
-        context.Usuarios.Add(new HelpDesk.Models.Usuario
-        {
-            Nome = "Administrador",
-            Email = "admin@helpdesk.com",
-            Senha = "123456",
-            DataCadastro = DateTime.Now,
-            IsAdministrador = true
-        });
-        context.SaveChanges();
-    }
-}
-*/
-
 app.Run();

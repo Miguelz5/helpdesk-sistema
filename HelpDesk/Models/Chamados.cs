@@ -8,16 +8,16 @@ namespace HelpDesk.Models
     {
         public int Id { get; set; }
 
-        public string NumeroChamado { get; set; } // SEM [Required]
+        public string NumeroChamado { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "O título é obrigatório")]
-        public string Titulo { get; set; }
+        public string Titulo { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "A descrição é obrigatória")]
-        public string Descricao { get; set; }
+        public string Descricao { get; set; } = string.Empty;
 
         public DateTime DataAbertura { get; set; } // SEM [Required]
-        public DateTime? DataFechamento { get; set; }
+        public DateTime? DataFechamento { get; set; } 
 
         public string Status { get; set; } // SEM [Required]
 
@@ -27,7 +27,7 @@ namespace HelpDesk.Models
         [Required(ErrorMessage = "A categoria é obrigatória")]
         public string Categoria { get; set; }
 
-        public string Responsavel { get; set; } // SEM [Required]
+        public string Responsavel { get; set; }
 
         public ICollection<Comentario> Comentarios { get; set; } = new List<Comentario>();
     }

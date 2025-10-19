@@ -39,62 +39,195 @@ namespace HelpDesk.Controllers
             var loginCheck = CheckLogin();
             if (loginCheck != null) return loginCheck;
 
-            // DATAS PARA OS PERÍODOS
-            var hoje = DateTime.Today;
+            try
+            {
+                // DATAS PARA OS PERÍODOS
+                var hoje = DateTime.Today;
+                var inicioSemana = hoje.AddDays(-6);
+                var inicioMes = new DateTime(hoje.Year, hoje.Month, 1);
 
-            // 🔥 SOLUÇÃO SIMPLES E INFALÍVEL
-            var inicioSemana = hoje.AddDays(-6); // ÚLTIMOS 7 DIAS (incluindo hoje)
-            var inicioMes = new DateTime(hoje.Year, hoje.Month, 1);
+                // 🔥 CORREÇÃO: Buscar dados de forma segura
+                var todosChamados = await _context.Chamados
+                    .Where(c => c.NumeroChamado != null) // 🔥 FILTRAR NULLs
+                    .ToListAsync();
 
-            // BUSCAR DO BANCO - ESTATÍSTICAS GERAIS
-            var chamadosUrgentes = await _context.Chamados
-                .Where(c => c.Prioridade == "Urgente" && c.Status != "Resolvido")
-                .ToListAsync();
+                var chamadosUrgentes = await _context.Chamados
+                    .Where(c => c.Prioridade == "Urgente" && c.Status != "Resolvido" && c.NumeroChamado != null)
+                    .ToListAsync();
 
-            var todosChamados = await _context.Chamados.ToListAsync();
+                // BUSCAR DO BANCO - ESTATÍSTICAS POR PERÍODO
+                ViewBag.ChamadosHoje = await _context.Chamados
+                    .Where(c => c.DataAbertura.Date == hoje && c.NumeroChamado != null)
+                    .CountAsync();
 
-            // BUSCAR DO BANCO - ESTATÍSTICAS POR PERÍODO
-            ViewBag.ChamadosHoje = await _context.Chamados
-                .Where(c => c.DataAbertura.Date == hoje)
-                .CountAsync();
+                ViewBag.ResolvidosHoje = await _context.Chamados
+                    .Where(c => c.DataFechamento.HasValue &&
+                               c.DataFechamento.Value.Date == hoje &&
+                               c.Status == "Resolvido" &&
+                               c.NumeroChamado != null)
+                    .CountAsync();
 
-            ViewBag.ResolvidosHoje = await _context.Chamados
-                .Where(c => c.DataFechamento.HasValue &&
-                           c.DataFechamento.Value.Date == hoje &&
-                           c.Status == "Resolvido")
-                .CountAsync();
+                ViewBag.ChamadosSemana = await _context.Chamados
+                    .Where(c => c.DataAbertura >= inicioSemana && c.NumeroChamado != null)
+                    .CountAsync();
 
-            ViewBag.ChamadosSemana = await _context.Chamados
-                .Where(c => c.DataAbertura >= inicioSemana)
-                .CountAsync();
+                ViewBag.ResolvidosSemana = await _context.Chamados
+                    .Where(c => c.DataFechamento.HasValue &&
+                               c.DataFechamento.Value >= inicioSemana &&
+                               c.Status == "Resolvido" &&
+                               c.NumeroChamado != null)
+                    .CountAsync();
 
-            ViewBag.ResolvidosSemana = await _context.Chamados
-                .Where(c => c.DataFechamento.HasValue &&
-                           c.DataFechamento.Value >= inicioSemana &&
-                           c.Status == "Resolvido")
-                .CountAsync();
+                ViewBag.ChamadosMes = await _context.Chamados
+                    .Where(c => c.DataAbertura >= inicioMes && c.NumeroChamado != null)
+                    .CountAsync();
 
-            ViewBag.ChamadosMes = await _context.Chamados
-                .Where(c => c.DataAbertura >= inicioMes)
-                .CountAsync();
+                ViewBag.ResolvidosMes = await _context.Chamados
+                    .Where(c => c.DataFechamento.HasValue &&
+                               c.DataFechamento.Value >= inicioMes &&
+                               c.Status == "Resolvido" &&
+                               c.NumeroChamado != null)
+                    .CountAsync();
 
-            ViewBag.ResolvidosMes = await _context.Chamados
-                .Where(c => c.DataFechamento.HasValue &&
-                           c.DataFechamento.Value >= inicioMes &&
-                           c.Status == "Resolvido")
-                .CountAsync();
+                // VIEWBAGS EXISTENTES
+                ViewBag.ChamadosUrgentes = chamadosUrgentes;
+                ViewBag.TotalChamados = todosChamados.Count;
+                ViewBag.ChamadosAbertos = todosChamados.Count(c => c.Status == "Aberto");
+                ViewBag.ChamadosEmAndamento = todosChamados.Count(c => c.Status == "Em Andamento");
+                ViewBag.ChamadosResolvidos = todosChamados.Count(c => c.Status == "Resolvido");
 
-            // VIEWBAGS EXISTENTES
-            ViewBag.ChamadosUrgentes = chamadosUrgentes;
-            ViewBag.TotalChamados = todosChamados.Count;
-            ViewBag.ChamadosAbertos = todosChamados.Count(c => c.Status == "Aberto");
-            ViewBag.ChamadosEmAndamento = todosChamados.Count(c => c.Status == "Em Andamento");
-            ViewBag.ChamadosResolvidos = todosChamados.Count(c => c.Status == "Resolvido");
+                return View(todosChamados);
+            }
+            catch (Exception ex)
+            {
+                // 🔥 DEBUG: Identificar o problema exato
+                Console.WriteLine($"ERRO NO INDEX: {ex.Message}");
 
-            return View(todosChamados);
+                // Buscar apenas os chamados que funcionam
+                var chamadosSeguros = await _context.Chamados
+                    .Where(c => c.NumeroChamado != null && c.Titulo != null && c.Descricao != null)
+                    .ToListAsync();
+
+                TempData["MensagemErro"] = "Alguns chamados com dados inválidos foram ignorados.";
+                return View(chamadosSeguros);
+            }
         }
 
-        // ... (restante do seu controller permanece igual)
+        // GET: Chamados/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            var loginCheck = CheckLogin();
+            if (loginCheck != null) return loginCheck;
+
+            if (id == null)
+            {
+                TempData["MensagemErro"] = "ID do chamado não informado!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var chamado = await _context.Chamados.FindAsync(id);
+            if (chamado == null)
+            {
+                TempData["MensagemErro"] = "Chamado não encontrado!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Preparar as listas para o dropdown
+            ViewBag.StatusList = new List<string> { "Aberto", "Em Andamento", "Resolvido" };
+            ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
+            ViewBag.CategoriaList = new List<string> { "Hardware", "Software", "Rede", "Acesso", "Outros" };
+
+            return View(chamado);
+        }
+
+        // POST: Chamados/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Chamado chamado)
+        {
+            var loginCheck = CheckLogin();
+            if (loginCheck != null) return loginCheck;
+
+            if (id != chamado.Id)
+            {
+                return NotFound();
+            }
+
+            // 🔥 REMOVER validações desnecessárias
+            ModelState.Remove("NumeroChamado");
+            ModelState.Remove("DataAbertura");
+            ModelState.Remove("DataFechamento");
+            ModelState.Remove("Comentarios");
+            ModelState.Remove("Responsavel"); // Já existe, mas vamos garantir
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.StatusList = new List<string> { "Aberto", "Em Andamento", "Resolvido" };
+                ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
+                ViewBag.CategoriaList = new List<string> { "Hardware", "Software", "Rede", "Acesso", "Outros" };
+                return View(chamado);
+            }
+
+            try
+            {
+                // BUSCAR O CHAMADO EXISTENTE
+                var chamadoExistente = await _context.Chamados.FindAsync(id);
+                if (chamadoExistente == null)
+                {
+                    return NotFound();
+                }
+
+                // 🔥 CORREÇÃO CRÍTICA: NUNCA atualizar o Responsavel com null
+                // Manter o Responsavel original se o novo for null ou vazio
+                var novoResponsavel = !string.IsNullOrWhiteSpace(chamado.Responsavel)
+                    ? chamado.Responsavel
+                    : chamadoExistente.Responsavel;
+
+                // 🔥 ATUALIZAR APENAS OS CAMPOS PERMITIDOS
+                chamadoExistente.Titulo = chamado.Titulo;
+                chamadoExistente.Descricao = chamado.Descricao;
+                chamadoExistente.Status = chamado.Status;
+                chamadoExistente.Prioridade = chamado.Prioridade;
+                chamadoExistente.Categoria = chamado.Categoria;
+                chamadoExistente.Responsavel = novoResponsavel ?? "Não atribuído"; // 🔥 GARANTIR que nunca seja null
+
+                // DATA DE FECHAMENTO AUTOMÁTICA
+                if (chamado.Status == "Resolvido" && chamadoExistente.DataFechamento == null)
+                {
+                    chamadoExistente.DataFechamento = DateTime.Now;
+                }
+                else if (chamado.Status != "Resolvido")
+                {
+                    chamadoExistente.DataFechamento = null;
+                }
+
+                _context.Update(chamadoExistente);
+                await _context.SaveChangesAsync();
+
+                TempData["MensagemSucesso"] = "Chamado atualizado com sucesso!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ChamadoExists(chamado.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["MensagemErro"] = $"Erro ao salvar: {ex.Message}";
+                ViewBag.StatusList = new List<string> { "Aberto", "Em Andamento", "Resolvido" };
+                ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
+                ViewBag.CategoriaList = new List<string> { "Hardware", "Software", "Rede", "Acesso", "Outros" };
+                return View(chamado);
+            }
+        }
+
         // GET: Chamados/Create
         public IActionResult Create()
         {
@@ -161,106 +294,6 @@ namespace HelpDesk.Controllers
             return $"{ano}-{novaSequencia.ToString("D4")}";
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Chamado chamado)
-        {
-            var loginCheck = CheckLogin();
-            if (loginCheck != null) return loginCheck;
-
-            if (id != chamado.Id)
-            {
-                return NotFound();
-            }
-
-            // 🔥 DEBUG: Verificar o que está chegando
-            Console.WriteLine($"DEBUG - NumeroChamado: {chamado.NumeroChamado}");
-            Console.WriteLine($"DEBUG - DataAbertura: {chamado.DataAbertura}");
-            Console.WriteLine($"DEBUG - ModelState IsValid: {ModelState.IsValid}");
-
-            // 🔥 REMOVER validações desnecessárias
-            ModelState.Remove("NumeroChamado");
-            ModelState.Remove("DataAbertura");
-            ModelState.Remove("DataFechamento");
-            ModelState.Remove("Comentarios");
-            ModelState.Remove("Responsavel"); // 🔥 ADICIONAR ESTE TAMBÉM
-
-            // 🔥 DEBUG: Verificar erros de validação
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors);
-                foreach (var error in errors)
-                {
-                    Console.WriteLine($"DEBUG - Validation Error: {error.ErrorMessage}");
-                }
-
-                TempData["MensagemErro"] = "Erro de validação. Verifique os campos.";
-                ViewBag.StatusList = new List<string> { "Aberto", "Em Andamento", "Resolvido" };
-                ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
-                ViewBag.CategoriaList = new List<string> { "Hardware", "Software", "Rede", "Acesso", "Outros" };
-                return View(chamado);
-            }
-
-            try
-            {
-                // BUSCAR E ATUALIZAR NO BANCO
-                var chamadoExistente = await _context.Chamados.FindAsync(id);
-                if (chamadoExistente == null)
-                {
-                    return NotFound();
-                }
-
-                // 🔥 CORRETO: Atualizar APENAS o chamadoExistente
-                chamadoExistente.Titulo = chamado.Titulo;
-                chamadoExistente.Descricao = chamado.Descricao;
-                chamadoExistente.Status = chamado.Status;
-                chamadoExistente.Prioridade = chamado.Prioridade;
-                chamadoExistente.Categoria = chamado.Categoria;
-                chamadoExistente.Responsavel = chamado.Responsavel;
-
-                // 🔥 MANTER dados originais que NÃO devem mudar
-                // Número do chamado e DataAbertura permanecem os mesmos!
-
-                // DATA DE FECHAMENTO AUTOMÁTICA
-                if (chamado.Status == "Resolvido" && chamadoExistente.DataFechamento == null)
-                {
-                    chamadoExistente.DataFechamento = DateTime.Now;
-                }
-                else if (chamado.Status != "Resolvido")
-                {
-                    chamadoExistente.DataFechamento = null;
-                }
-
-                _context.Update(chamadoExistente);
-                await _context.SaveChangesAsync();
-
-                TempData["MensagemSucesso"] = "Chamado atualizado com sucesso!";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ChamadoExists(chamado.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            catch (Exception ex)
-            {
-                // 🔥 DEBUG: Capturar qualquer outro erro
-                Console.WriteLine($"DEBUG - Exception: {ex.Message}");
-                TempData["MensagemErro"] = $"Erro ao salvar: {ex.Message}";
-
-                ViewBag.StatusList = new List<string> { "Aberto", "Em Andamento", "Resolvido" };
-                ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
-                ViewBag.CategoriaList = new List<string> { "Hardware", "Software", "Rede", "Acesso", "Outros" };
-                return View(chamado);
-            }
-        }
-
         // 🔥 MÉTODO PARA CORRIGIR CHAMADOS NULL - Execute UMA VEZ
         public async Task<IActionResult> CorrigirNumerosChamados()
         {
@@ -286,7 +319,7 @@ namespace HelpDesk.Controllers
         {
             var loginCheck = CheckLogin();
             if (loginCheck != null) return loginCheck;
-            
+
             if (id == null)
             {
                 TempData["MensagemErro"] = "ID do chamado não informado!";
