@@ -13,7 +13,6 @@ namespace HelpDesk.Controllers
     {
         private readonly AppDbContext _context;
 
-        // CONSTRUTOR COM INJEÇÃO DO BANCO
         public ChamadosController(AppDbContext context)
         {
             _context = context;
@@ -46,9 +45,9 @@ namespace HelpDesk.Controllers
                 var inicioSemana = hoje.AddDays(-6);
                 var inicioMes = new DateTime(hoje.Year, hoje.Month, 1);
 
-                // 🔥 CORREÇÃO: Buscar dados de forma segura
+               
                 var todosChamados = await _context.Chamados
-                    .Where(c => c.NumeroChamado != null) // 🔥 FILTRAR NULLs
+                    .Where(c => c.NumeroChamado != null) 
                     .ToListAsync();
 
                 var chamadosUrgentes = await _context.Chamados
@@ -100,7 +99,7 @@ namespace HelpDesk.Controllers
             }
             catch (Exception ex)
             {
-                // 🔥 DEBUG: Identificar o problema exato
+                
                 Console.WriteLine($"ERRO NO INDEX: {ex.Message}");
 
                 // Buscar apenas os chamados que funcionam
@@ -153,12 +152,12 @@ namespace HelpDesk.Controllers
                 return NotFound();
             }
 
-            // 🔥 REMOVER validações desnecessárias
+           
             ModelState.Remove("NumeroChamado");
             ModelState.Remove("DataAbertura");
             ModelState.Remove("DataFechamento");
             ModelState.Remove("Comentarios");
-            ModelState.Remove("Responsavel"); // Já existe, mas vamos garantir
+            ModelState.Remove("Responsavel"); 
 
             if (!ModelState.IsValid)
             {
@@ -177,19 +176,18 @@ namespace HelpDesk.Controllers
                     return NotFound();
                 }
 
-                // 🔥 CORREÇÃO CRÍTICA: NUNCA atualizar o Responsavel com null
-                // Manter o Responsavel original se o novo for null ou vazio
+                
                 var novoResponsavel = !string.IsNullOrWhiteSpace(chamado.Responsavel)
                     ? chamado.Responsavel
                     : chamadoExistente.Responsavel;
 
-                // 🔥 ATUALIZAR APENAS OS CAMPOS PERMITIDOS
+               
                 chamadoExistente.Titulo = chamado.Titulo;
                 chamadoExistente.Descricao = chamado.Descricao;
                 chamadoExistente.Status = chamado.Status;
                 chamadoExistente.Prioridade = chamado.Prioridade;
                 chamadoExistente.Categoria = chamado.Categoria;
-                chamadoExistente.Responsavel = novoResponsavel ?? "Não atribuído"; // 🔥 GARANTIR que nunca seja null
+                chamadoExistente.Responsavel = novoResponsavel ?? "Não atribuído"; 
 
                 // DATA DE FECHAMENTO AUTOMÁTICA
                 if (chamado.Status == "Resolvido" && chamadoExistente.DataFechamento == null)
@@ -251,7 +249,7 @@ namespace HelpDesk.Controllers
             {
                 chamado.NumeroChamado = GerarNumeroChamado();
                 chamado.Status = "Aberto";
-                chamado.DataAbertura = DateTime.UtcNow.AddHours(-3); // Ajuste para seu fuso horário
+                chamado.DataAbertura = DateTime.UtcNow.AddHours(-3); 
                 chamado.Responsavel = "";
 
                 _context.Chamados.Add(chamado);
@@ -267,7 +265,7 @@ namespace HelpDesk.Controllers
             return View(chamado);
         }
 
-        // 🔥 MÉTODO CORRIGIDO PARA GERAR NÚMERO DO CHAMADO
+        
         private string GerarNumeroChamado()
         {
             var ano = DateTime.Now.Year;
@@ -294,7 +292,7 @@ namespace HelpDesk.Controllers
             return $"{ano}-{novaSequencia.ToString("D4")}";
         }
 
-        // 🔥 MÉTODO PARA CORRIGIR CHAMADOS NULL - Execute UMA VEZ
+        
         public async Task<IActionResult> CorrigirNumerosChamados()
         {
             var chamadosSemNumero = await _context.Chamados
@@ -342,9 +340,8 @@ namespace HelpDesk.Controllers
                 .OrderBy(c => c.DataCriacao)
                 .ToList();
 
-            // 🔥 PASSAR O NOME DO USUÁRIO LOGADO E LISTA DE ADMINS
             ViewBag.NomeUsuarioLogado = ObterNomeUsuarioLogado();
-            ViewBag.Admins = await _context.Usuarios.ToListAsync(); // 🔥 NOVA LINHA
+            ViewBag.Admins = await _context.Usuarios.ToListAsync();
 
             return View(chamado);
         }
@@ -357,7 +354,6 @@ namespace HelpDesk.Controllers
             var loginCheck = CheckLogin();
             if (loginCheck != null) return loginCheck;
 
-            // 🔥 VERIFICAR SE CHAMADO ESTÁ ATRIBUÍDO E NÃO ESTÁ RESOLVIDO
             var chamado = await _context.Chamados.FindAsync(chamadoId);
             if (chamado == null || string.IsNullOrEmpty(chamado.Responsavel))
             {
@@ -365,7 +361,6 @@ namespace HelpDesk.Controllers
                 return RedirectToAction("Details", new { id = chamadoId });
             }
 
-            // 🔥 NOVA VERIFICAÇÃO: BLOQUEAR SE CHAMADO ESTÁ RESOLVIDO
             if (chamado.Status == "Resolvido")
             {
                 TempData["MensagemErro"] = "Este chamado já foi resolvido e está fechado para novos comentários!";
@@ -425,7 +420,6 @@ namespace HelpDesk.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // 🔥 PEGAR O NOME DO USUÁRIO LOGADO (precisamos implementar isso)
             var nomeUsuarioLogado = ObterNomeUsuarioLogado();
 
             chamado.Responsavel = nomeUsuarioLogado;
@@ -438,21 +432,17 @@ namespace HelpDesk.Controllers
             return RedirectToAction("Details", new { id = chamado.Id });
         }
 
-        // 🔥 MÉTODO PARA OBTER O NOME DO USUÁRIO LOGADO
         private string ObterNomeUsuarioLogado()
         {
-            // Por enquanto, vamos usar um nome fixo baseado no email
-            // FUTURO: Buscar do banco de dados
-            var email = User.Identity.Name; // Isso pega o email do usuário logado
+            var email = User.Identity.Name; 
 
             if (!string.IsNullOrEmpty(email))
             {
-                // Extrai o nome do email (ex: "joao@empresa.com" → "Joao")
                 var nome = email.Split('@')[0];
-                return char.ToUpper(nome[0]) + nome.Substring(1); // Primeira letra maiúscula
+                return char.ToUpper(nome[0]) + nome.Substring(1);
             }
 
-            return "Administrador"; // Fallback
+            return "Administrador";
         }
 
         // POST: Chamados/AtribuirParaAdmin/5
@@ -478,7 +468,7 @@ namespace HelpDesk.Controllers
                 return RedirectToAction("Details", new { id = chamado.Id });
             }
 
-            chamado.Responsavel = admin.Nome; // 🔥 Usar o nome do admin
+            chamado.Responsavel = admin.Nome; 
             chamado.Status = "Em Andamento";
 
             _context.Update(chamado);

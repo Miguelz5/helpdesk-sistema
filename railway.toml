@@ -1,0 +1,9 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "dotnet HelpDesk.dll"
+
+[env]
+PORT = 80
+ASPNETCORE_URLS = "http://*:80"
