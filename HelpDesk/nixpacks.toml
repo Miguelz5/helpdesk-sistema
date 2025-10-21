@@ -1,0 +1,11 @@
+﻿[phases.setup]
+cmds = ["dotnet restore"]
+
+[phases.build]
+cmds = ["dotnet publish -c Release -o /app"]
+
+[start]
+cmd = "dotnet /app/HelpDesk.dll"
+
+[environment]
+DOTNET_VERSION = "8.0"
