@@ -2,7 +2,7 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "dotnet HelpDesk.dll"
+startCommand = "dotnet ./HelpDesk.dll"
 
 [env]
 PORT = 80
