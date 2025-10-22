@@ -1,0 +1,14 @@
+{
+  "builds": [
+    {
+      "src": "HelpDesk.csproj",
+      "use": "@vercel/dotnet"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
