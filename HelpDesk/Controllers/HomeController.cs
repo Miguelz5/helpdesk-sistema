@@ -1,6 +1,6 @@
 using System.Diagnostics;
-using HelpDesk.Models;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+
 
 namespace HelpDesk.Controllers
 {

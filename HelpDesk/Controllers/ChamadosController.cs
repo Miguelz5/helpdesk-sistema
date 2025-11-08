@@ -12,10 +12,12 @@ namespace HelpDesk.Controllers
     public class ChamadosController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-        public ChamadosController(AppDbContext context)
+        public ChamadosController(AppDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         // Helper method para verificar login
@@ -231,12 +233,13 @@ namespace HelpDesk.Controllers
         {
             ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
             ViewBag.CategoriaList = new List<string> { "Hardware", "Software", "Rede", "Acesso", "Outros" };
+
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Chamado chamado)
+        public async Task<IActionResult> Create(Chamado chamado, List<IFormFile> anexos)
         {
             ModelState.Remove("Status");
             ModelState.Remove("NumeroChamado");
@@ -244,28 +247,189 @@ namespace HelpDesk.Controllers
             ModelState.Remove("DataFechamento");
             ModelState.Remove("Responsavel");
             ModelState.Remove("Comentarios");
+            ModelState.Remove("Anexos");
 
             if (ModelState.IsValid)
             {
-                chamado.NumeroChamado = GerarNumeroChamado();
-                chamado.Status = "Aberto";
-                chamado.DataAbertura = DateTime.UtcNow.AddHours(-3); 
-                chamado.Responsavel = "";
+                try
+                {
+                    chamado.Prioridade = ObterPrioridadePorCategoria(chamado.Categoria);
+                    chamado.NumeroChamado = GerarNumeroChamado();
+                    chamado.Status = "Aberto";
+                    chamado.DataAbertura = DateTime.Now;
+                    chamado.Responsavel = "";
 
-                _context.Chamados.Add(chamado);
-                await _context.SaveChangesAsync();
+                    _context.Chamados.Add(chamado);
+                    await _context.SaveChangesAsync(); 
 
-                TempData["MensagemSucesso"] = $"Chamado #{chamado.NumeroChamado} criado com sucesso!";
-                return RedirectToAction(nameof(Index));
+                    if (anexos != null && anexos.Count > 0)
+                    {
+                        await ProcessarAnexos(chamado.Id, anexos);
+                    }
+
+                    TempData["MensagemSucesso"] = $"Chamado #{chamado.NumeroChamado} criado com sucesso!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    TempData["MensagemErro"] = $"Erro ao criar chamado: {ex.Message}";
+                }
             }
 
             ViewBag.PrioridadeList = new List<string> { "Baixa", "Média", "Alta", "Urgente" };
             ViewBag.CategoriaList = new List<string> { "Hardware", "Software", "Rede", "Acesso", "Outros" };
-
             return View(chamado);
         }
 
-        
+        private async Task ProcessarAnexos(int chamadoId, List<IFormFile> anexos)
+        {
+            foreach (var anexo in anexos)
+            {
+                if (anexo.Length > 0 && anexo.Length < 10 * 1024 * 1024) 
+                {
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await anexo.CopyToAsync(memoryStream);
+
+                        var fileName = Path.GetFileName(anexo.FileName);
+                        var fileExtension = Path.GetExtension(fileName).ToLower();
+
+                        var novoAnexo = new Anexo
+                        {
+                            ChamadoId = chamadoId,
+                            NomeArquivo = fileName,
+                            TipoArquivo = anexo.ContentType, 
+                            TamanhoArquivo = anexo.Length,
+                            DadosArquivo = memoryStream.ToArray(),
+                            DataUpload = DateTime.Now,
+                            UploadPor = ObterNomeUsuarioLogado()
+                        };
+
+                        if (string.IsNullOrEmpty(novoAnexo.TipoArquivo))
+                        {
+                            novoAnexo.TipoArquivo = fileExtension;
+                        }
+
+                        _context.Anexos.Add(novoAnexo);
+                    }
+                }
+            }
+            await _context.SaveChangesAsync();
+        }
+        private string ObterPrioridadePorCategoria(string categoria)
+        {
+            return categoria?.ToLower() switch
+            {
+                "hardware" => "Alta",
+                "software" => "Média",
+                "rede" => "Urgente",
+                "acesso" => "Urgente",
+                "outros" => "Baixa",
+                _ => "Média"
+            };
+        }
+
+        public async Task<IActionResult> DownloadAnexo(int id)
+        {
+            var anexo = await _context.Anexos.FindAsync(id);
+            if (anexo == null)
+            {
+                return NotFound();
+            }
+
+            var contentType = ObterContentType(anexo.TipoArquivo);
+            return File(anexo.DadosArquivo, contentType, anexo.NomeArquivo);
+        }
+
+        public async Task<IActionResult> VisualizarAnexo(int id)
+        {
+            var anexo = await _context.Anexos.FindAsync(id);
+            if (anexo == null)
+            {
+                return NotFound();
+            }
+
+            var contentType = ObterContentType(anexo.TipoArquivo);
+
+            if (contentType.StartsWith("image/") || contentType == "application/pdf")
+            {
+                return File(anexo.DadosArquivo, contentType);
+            }
+            else
+            {
+                return File(anexo.DadosArquivo, contentType, anexo.NomeArquivo);
+            }
+        }
+
+        private string ObterContentType(string tipoArquivo)
+        {
+            if (string.IsNullOrEmpty(tipoArquivo))
+                return "application/octet-stream";
+
+            // Se já é um content type válido, retorna como está
+            if (tipoArquivo.Contains("/"))
+                return tipoArquivo;
+
+            // Mapear extensões para content types
+            return tipoArquivo.ToLower() switch
+            {
+                ".pdf" => "application/pdf",
+                ".doc" => "application/msword",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".xls" => "application/vnd.ms-excel",
+                ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".txt" => "text/plain",
+                _ => "application/octet-stream"
+            };
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExcluirAnexo(int id)
+        {
+            var anexo = await _context.Anexos.FindAsync(id);
+            if (anexo == null)
+            {
+                TempData["MensagemErro"] = "Anexo não encontrado!";
+                return RedirectToAction("Details", new { id = anexo?.ChamadoId });
+            }
+
+            var chamadoId = anexo.ChamadoId;
+
+            _context.Anexos.Remove(anexo);
+            await _context.SaveChangesAsync();
+
+            TempData["MensagemSucesso"] = "Anexo excluído com sucesso!";
+            return RedirectToAction("Details", new { id = chamadoId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AdicionarAnexos(int id, List<IFormFile> anexos)
+        {
+            var chamado = await _context.Chamados.FindAsync(id);
+            if (chamado == null)
+            {
+                TempData["MensagemErro"] = "Chamado não encontrado!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (anexos != null && anexos.Any())
+            {
+                await ProcessarAnexos(id, anexos);
+                TempData["MensagemSucesso"] = "Anexos adicionados com sucesso!";
+            }
+            else
+            {
+                TempData["MensagemErro"] = "Nenhum arquivo selecionado!";
+            }
+
+            return RedirectToAction("Details", new { id });
+        }
+
+
         private string GerarNumeroChamado()
         {
             var ano = DateTime.Now.Year;
@@ -323,12 +487,11 @@ namespace HelpDesk.Controllers
                 TempData["MensagemErro"] = "ID do chamado não informado!";
                 return RedirectToAction(nameof(Index));
             }
-
-            // BUSCAR CHAMADO + COMENTÁRIOS
             var chamado = await _context.Chamados
-                .Include(c => c.Comentarios)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
+    .Include(c => c.Comentarios)
+    .Include(c => c.Anexos)
+    .FirstOrDefaultAsync(m => m.Id == id);
+                
             if (chamado == null)
             {
                 TempData["MensagemErro"] = "Chamado não encontrado!";
@@ -483,14 +646,41 @@ namespace HelpDesk.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // BUSCAR E EXCLUIR DO BANCO
-            var chamado = await _context.Chamados.FindAsync(id);
-            if (chamado != null)
+            try
             {
-                _context.Chamados.Remove(chamado);
-                await _context.SaveChangesAsync();
-                TempData["MensagemSucesso"] = "Chamado excluído com sucesso!";
+                var chamado = await _context.Chamados
+                    .Include(c => c.Comentarios)
+                    .Include(c => c.Anexos)
+                    .FirstOrDefaultAsync(m => m.Id == id);
+
+                if (chamado != null)
+                {
+
+                    if (chamado.Comentarios != null && chamado.Comentarios.Any())
+                    {
+                        _context.Comentarios.RemoveRange(chamado.Comentarios);
+                    }
+
+                    if (chamado.Anexos != null && chamado.Anexos.Any())
+                    {
+                        _context.Anexos.RemoveRange(chamado.Anexos);
+                    }
+
+                    _context.Chamados.Remove(chamado);
+                    await _context.SaveChangesAsync();
+
+                    TempData["MensagemSucesso"] = "Chamado excluído com sucesso!";
+                }
+                else
+                {
+                    TempData["MensagemErro"] = "Chamado não encontrado!";
+                }
             }
+            catch (Exception ex)
+            {
+                TempData["MensagemErro"] = $"Erro ao excluir chamado: {ex.Message}";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 

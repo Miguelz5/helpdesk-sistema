@@ -1,45 +1,44 @@
 ﻿@model IEnumerable<HelpDesk.Models.Usuario>
 
 @{
-    ViewBag.Title = "Usuários Administradores";
+    ViewBag.Title = "Usuários Comuns";
 }
 <link href="~/css/site.css" rel="stylesheet" />
 <div class="container py-4">
     <div class="row mb-4">
         <div class="col-md-8">
             <h2 class="page-title">
-                <i class="fas fa-users-cog me-2 text-primary"></i>
-                Usuários Administradores
-            </h2>
-            <p class="text-muted">Gerencie os administradores do sistema Help Desk</p>
+    <i class="fas fa-users me-2 text-info"></i>
+    Usuários
+</h2>
+<p class="text-muted">Gerencie os usuários do sistema Help Desk</p>
         </div>
         <div class="col-md-4 text-end">
     <div class="d-flex gap-2 justify-content-end">
-        <!-- Botão para Ver Usuários Comuns -->
-        @Html.ActionLink(" Ver Usuários", "UsuariosComuns", null, new { 
-            @class = "btn btn-info",
-            style = "background-color: #0dcaf0; border-color: #0dcaf0; color: white; padding: 8px 16px; font-weight: 500; border-radius: 6px;" 
+        <!-- Botão para Voltar para Administradores -->
+        @Html.ActionLink(" Ver Administradores", "Index", null, new { 
+            @class = "btn btn-primary",
+            style = "background-color: #0d6efd; border-color: #0d6efd; color: white; padding: 8px 16px; font-weight: 500; border-radius: 6px;" 
         })
-        <!-- Botão Cadastrar Usuário -->
-        @Html.ActionLink(" Cadastrar Usuário", "Create", null, new { 
-            @class = "btn btn-success",
-            style = "background-color: #198754; border-color: #198754; color: white; padding: 8px 16px; font-weight: 500; border-radius: 6px;" 
-        })
+        <!-- ✅ BOTÃO CORRIGIDO COM PARÂMETRO -->
+@Html.ActionLink(" Cadastrar Usuário", "Create", new { from = "usuarioscomuns" }, new { 
+    @class = "btn btn-success",
+    style = "background-color: #198754; border-color: #198754; color: white; padding: 8px 16px; font-weight: 500; border-radius: 6px;" 
+})
     </div>
 </div>
     </div>
 
-
-  <div class="card shadow-sm">
+    <div class="card shadow-sm">
         <div class="card-header bg-white">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="fas fa-user-shield me-2 text-primary"></i>
-                    Lista de Administradores
-                </h5>
-                <span class="badge bg-primary">
+    <i class="fas fa-users me-2 text-info"></i>
+    Lista de Usuários
+</h5>
+                <span class="badge bg-info">
                     <i class="fas fa-users me-1"></i>
-                    @Model.Count() Administrador(es)
+                    @Model.Count() Usuário(s)
                 </span>
             </div>
         </div>
@@ -67,8 +66,8 @@
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <div class="avatar-circle me-3 bg-primary">
-                                                <i class="fas fa-user-shield text-white"></i>
+                                            <div class="avatar-circle me-3 bg-info">
+                                                <i class="fas fa-user text-white"></i>
                                             </div>
                                             <div>
                                                 <strong>@item.Nome</strong>
@@ -78,9 +77,9 @@
                                     <td>@item.Email</td>
                                     <td>@item.DataCadastro.ToString("dd/MM/yyyy HH:mm")</td>
                                     <td>
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-user-shield me-1"></i>
-                                            Administrador
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-user me-1"></i>
+                                            Usuário Comum
                                         </span>
                                     </td>
                                     <td>
@@ -90,7 +89,7 @@
                                         @Html.ActionLink(" Excluir", "Delete", new { id = item.Id }, 
                                             new { 
                                                 @class = "btn btn-outline-danger btn-sm",
-                                                onclick = "return confirm('Tem certeza que deseja excluir este administrador?');" 
+                                                onclick = "return confirm('Tem certeza que deseja excluir este usuário?');" 
                                             })
                                     </td>
                                 </tr>
@@ -102,13 +101,9 @@
             else
             {
                 <div class="empty-state text-center py-5">
-                    <i class="fas fa-user-shield fa-4x text-muted mb-3"></i>
-                    <h5 class="text-muted">Nenhum administrador cadastrado</h5>
-                    <p class="text-muted">Adicione o primeiro administrador para começar</p>
-                    @Html.ActionLink(" Adicionar Administrador", "Create", null, new { 
-                        @class = "btn btn-success-custom",
-                        style = "background-color: #157347; border-color: #157347; color: white; padding: 10px 20px; font-weight: 500;" 
-                    })
+                    <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum usuário comum cadastrado</h5>
+                    <p class="text-muted">Todos os usuários cadastrados são administradores</p>
                 </div>
             }
         </div>

@@ -16,10 +16,10 @@ namespace HelpDesk.Models
         [Required(ErrorMessage = "A descrição é obrigatória")]
         public string Descricao { get; set; } = string.Empty;
 
-        public DateTime DataAbertura { get; set; } 
-        public DateTime? DataFechamento { get; set; } 
+        public DateTime DataAbertura { get; set; }
+        public DateTime? DataFechamento { get; set; }
 
-        public string Status { get; set; } 
+        public string Status { get; set; }
 
         [Required(ErrorMessage = "A prioridade é obrigatória")]
         public string Prioridade { get; set; }
@@ -30,5 +30,7 @@ namespace HelpDesk.Models
         public string Responsavel { get; set; }
 
         public ICollection<Comentario> Comentarios { get; set; } = new List<Comentario>();
+
+        public ICollection<Anexo> Anexos { get; set; } = new List<Anexo>();
     }
 }

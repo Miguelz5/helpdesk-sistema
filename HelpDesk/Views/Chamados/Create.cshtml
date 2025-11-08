@@ -13,9 +13,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="~/css/site.css" rel="stylesheet" />
     <div class="card-body">
-        @using (Html.BeginForm())
-        {
-            @Html.AntiForgeryToken()
+        @using (Html.BeginForm("Create", "Chamados", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
 
             <!-- MENSAGEM DE ERRO GERAL -->
             @if (TempData["MensagemErro"] != null)
@@ -71,35 +71,93 @@
             </div>
 
             <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group mb-3">
-                        @Html.LabelFor(model => model.Prioridade, htmlAttributes: new { @class = "control-label fw-bold" })
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-exclamation-triangle"></i></span>
-                            @Html.DropDownListFor(model => model.Prioridade,
-                                new SelectList(ViewBag.PrioridadeList),
-                                "Selecione a prioridade",
-                                new { 
-                                    @class = "form-control" + (ViewData.ModelState["Prioridade"]?.Errors?.Count > 0 ? " is-invalid" : "")
-                                })
-                        </div>
-                        @Html.ValidationMessageFor(model => model.Prioridade, "", new { @class = "text-danger small fw-bold" })
-                    </div>
-                </div>
+               <!-- PRIORIDADE (AUTOMÁTICA) -->
+<div class="col-md-6">
+    <div class="form-group mb-3">
+        <label class="control-label fw-bold">Prioridade (Automática)</label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-exclamation-triangle"></i></span>
+            <input type="text" class="form-control" id="prioridadeDisplay" 
+                   value="Selecione uma categoria" readonly style="background-color: #f8f9fa;">
+            @Html.HiddenFor(model => model.Prioridade, new { id = "prioridadeHidden" })
+        </div>
+        <small class="text-muted">A prioridade será definida automaticamente conforme a categoria</small>
+        @Html.ValidationMessageFor(model => model.Prioridade, "", new { @class = "text-danger small fw-bold" })
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const categoriaSelect = document.getElementById('Categoria');
+            const prioridadeDisplay = document.getElementById('prioridadeDisplay');
+            const prioridadeHidden = document.getElementById('prioridadeHidden');
+
+            // Mapeamento categoria -> prioridade conforme especificado
+            const mapeamentoPrioridade = {
+                'Hardware': 'Alta',
+                'Software': 'Média', 
+                'Rede': 'Urgente',
+                'Acesso': 'Urgente',
+                'Outros': 'Baixa'
+            };
+
+            function atualizarPrioridade() {
+                const categoria = categoriaSelect.value;
+                const prioridade = mapeamentoPrioridade[categoria] || 'Selecione uma categoria';
+                
+                prioridadeDisplay.value = prioridade;
+                prioridadeHidden.value = prioridade;
+
+                // Adicionar cores conforme a prioridade
+                prioridadeDisplay.className = 'form-control ';
+                if (prioridade === 'Urgente') {
+                    prioridadeDisplay.classList.add('bg-danger', 'text-white');
+                } else if (prioridade === 'Alta') {
+                    prioridadeDisplay.classList.add('bg-warning', 'text-dark');
+                } else if (prioridade === 'Média') {
+                    prioridadeDisplay.classList.add('bg-info', 'text-white');
+                } else if (prioridade === 'Baixa') {
+                    prioridadeDisplay.classList.add('bg-success', 'text-white');
+                } else {
+                    prioridadeDisplay.classList.add('bg-light');
+                }
+            }
+
+            categoriaSelect.addEventListener('change', atualizarPrioridade);
+            
+            // Inicializar
+            atualizarPrioridade();
+        });
+    </script>
+}
                 <div class="col-md-6">
                     <!-- Espaço vazio -->
                 </div>
             </div>
 
-           
 
-            <div class="form-group mt-4">
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-check"></i> Criar Chamado
-                </button>
-                @Html.ActionLink(" Voltar", "Index", "Chamados", null, new { @class = "btn btn-secondary" })
-            </div>
-        }
+ <!-- ANEXOS -->
+    <div class="form-group mb-3">
+        <label class="control-label fw-bold">Anexos</label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-paperclip"></i></span>
+            <input type="file" class="form-control" name="anexos" multiple 
+                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt,.xls,.xlsx">
+        </div>
+        <small class="text-muted">
+            Formatos aceitos: PDF, Word, Excel, JPG, PNG, TXT. Tamanho máximo: 10MB por arquivo.
+        </small>
+    </div>
+
+    <div class="form-group mt-4">
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-check"></i> Criar Chamado
+        </button>
+        @Html.ActionLink(" Voltar", "Index", "Chamados", null, new { @class = "btn btn-secondary" })
+    </div>
+}
+
     </div>
 </div>
 

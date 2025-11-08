@@ -1,22 +1,25 @@
+﻿using Microsoft.EntityFrameworkCore;
 using HelpDesk.Data;
-using HelpDesk.Models;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ✅ CORREÇÃO: Configurar Authentication ANTES de AddControllersWithViews
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/Login";
+        options.AccessDeniedPath = "/Auth/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+        options.Cookie.HttpOnly = true;
+        options.SlidingExpiration = true;
+    });
+
+builder.Services.AddAuthorization();
+
 // Database configuration
-if (builder.Environment.IsProduction())
-{
-    // Railway provides DATABASE_URL environment variable
-    var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(connectionString));
-}
-else
-{
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-}
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -39,27 +42,15 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
+// ✅ ORDEM CORRETA: Authentication antes de Authorization
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.UseSession();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-// Create database if not exists
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
-        context.Database.EnsureCreated();
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred creating the DB.");
-    }
-}
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 app.Run();

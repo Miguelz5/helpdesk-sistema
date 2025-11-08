@@ -1,10 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using HelpDesk.Models;
 using HelpDesk.Data;
+using HelpDesk.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+
+
 
 namespace HelpDesk.Controllers
 {
@@ -23,25 +27,25 @@ namespace HelpDesk.Controllers
             return View();
         }
 
-        // POST: Auth/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string email, string senha)
         {
             try
             {
-                // LIMPAR MENSAGENS ANTIGAS
-                TempData.Remove("MensagemSucesso");
-                TempData.Remove("MensagemErro");
-                ModelState.Clear(); // Limpar erros anteriores
+                Console.WriteLine($"=== TENTATIVA DE LOGIN ===");
+                Console.WriteLine($"Email: {email}");
+                Console.WriteLine($"Senha: {senha}");
 
-                // Buscar usuário no banco
                 var usuario = await _context.Usuarios
                     .FirstOrDefaultAsync(u => u.Email == email && u.Senha == senha);
 
                 if (usuario != null)
                 {
-                    // Criar claims (dados do usuário)
+                    Console.WriteLine($"✅ USUÁRIO ENCONTRADO: {usuario.Nome}");
+                    Console.WriteLine($"✅ IsAdmin: {usuario.IsAdministrador}");
+
+                    // Criar claims
                     var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, usuario.Nome),
@@ -53,32 +57,30 @@ namespace HelpDesk.Controllers
                     var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                     var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 
-                    // Criar cookie de autenticação
                     await HttpContext.SignInAsync(claimsPrincipal);
 
-                    // Salvar dados na sessão
+                    // Sessão
                     HttpContext.Session.SetString("UsuarioNome", usuario.Nome);
                     HttpContext.Session.SetString("UsuarioEmail", usuario.Email);
                     HttpContext.Session.SetInt32("UsuarioId", usuario.Id);
 
-                    TempData["MensagemSucesso"] = "Login realizado com sucesso!";
+                    Console.WriteLine($"✅ REDIRECIONANDO PARA Chamados/Index");
                     return RedirectToAction("Index", "Chamados");
                 }
                 else
                 {
-                    // ADICIONAR ERRO AO MODELSTATE (aparece na view de login)
-                    ModelState.AddModelError("", "Email ou senha inválidos");
-                    ViewBag.MensagemErro = "Email ou senha inválidos"; // Alternativa
+                    Console.WriteLine($"❌ USUÁRIO NÃO ENCONTRADO");
+                    ViewBag.MensagemErro = "Email ou senha inválidos"; 
                     return View();
                 }
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", "Erro ao conectar com o banco de dados");
+                Console.WriteLine($"❌ ERRO: {ex.Message}");
+                TempData["MensagemErro"] = "Erro interno no servidor";
                 return View();
             }
         }
-
         // GET: Auth/Logout
         public async Task<IActionResult> Logout()
         {

@@ -1,7 +1,8 @@
 ﻿@model HelpDesk.Models.Usuario
 
 @{
-    ViewBag.Title = "Adicionar Administrador";
+    var fromUsuariosComuns = ViewBag.FromUsuariosComuns as bool? ?? false;
+    ViewBag.Title = "Cadastrar Usuário";
 }
 <link href="~/css/site.css" rel="stylesheet" />
 
@@ -12,7 +13,7 @@
                 <div class="card-header form-card-header">
                     <h4 class="mb-0">
                         <i class="fas fa-user-plus me-2"></i>
-                        Adicionar Novo Administrador
+                        Cadastrar Novo Usuário
                     </h4>
                 </div>
                 <div class="card-body p-4">
@@ -21,12 +22,11 @@
                         @Html.AntiForgeryToken()
                         @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
 
-                        <!-- Campos do formulário (mantidos iguais) -->
                         <div class="row mb-4">
                             <div class="col-md-12">
                                 <h5 class="form-section-title">
                                     <i class="fas fa-user-circle me-2"></i>
-                                    Informações do Administrador
+                                    Informações do Usuário
                                 </h5>
                             </div>
 
@@ -55,7 +55,7 @@
                             @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger small" })
                         </div>
 
-                        <div class="col-md-12 mb-4">
+                        <div class="col-md-12 mb-3">
                             @Html.LabelFor(model => model.Senha, htmlAttributes: new { @class = "form-label fw-semibold" })
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-lock"></i></span>
@@ -67,14 +67,30 @@
                             @Html.ValidationMessageFor(model => model.Senha, "", new { @class = "text-danger small" })
                             <div class="form-text">Use pelo menos 6 caracteres incluindo letras e números</div>
                         </div>
+
+                        <div class="col-md-12 mb-4">
+                            <label class="form-label fw-semibold">Tipo de Usuário</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
+                                <select class="form-select" name="IsAdministrador" id="IsAdministrador">
+                                    <option value="true">Administrador</option>
+                                    <option value="false">Usuário Comum</option>
+                                </select>
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <strong>Administradores</strong> têm acesso completo ao sistema.
+                                <strong>Usuários Comuns</strong> têm acesso limitado.
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- BOTÕES CORRIGIDOS -->
+                    <!-- BOTÕES -->
                     <div class="row mt-4">
                         <div class="col-md-12">
                             <div class="d-flex gap-2 justify-content-start">
-                                <button type="submit" class="btn btn-success-custom">
-                                    <i class="fas fa-save me-1"></i> Adicionar Administrador
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-1"></i> Cadastrar Usuário
                                 </button>
                                 @Html.ActionLink(" Cancelar", "Index", "Usuarios", null, new {
                                                                 @class = "btn btn-secondary"
@@ -88,3 +104,43 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ✅ USAR VIEWBAG PARA DETECTAR ORIGEM
+        const fromUsuariosComuns = @Json.Serialize(fromUsuariosComuns);
+
+        const tipoUsuarioSelect = document.getElementById('IsAdministrador');
+        const submitButton = document.querySelector('button[type="submit"]');
+        const cardHeader = document.querySelector('.card-header h4');
+
+        if (fromUsuariosComuns) {
+            // ✅ SE VEIO DA PÁGINA DE USUÁRIOS COMUNS, DEFINIR COMO USUÁRIO COMUM
+            tipoUsuarioSelect.value = 'false';
+            cardHeader.innerHTML = '<i class="fas fa-user-plus me-2"></i> Cadastrar Novo Usuário Comum';
+            submitButton.innerHTML = '<i class="fas fa-save me-1"></i> Cadastrar Usuário Comum';
+        }
+
+        // Resto do script permanece igual...
+        tipoUsuarioSelect.addEventListener('change', function() {
+            if (this.value === 'true') {
+                this.classList.remove('border-info');
+                this.classList.add('border-primary');
+                cardHeader.innerHTML = '<i class="fas fa-user-plus me-2"></i> Cadastrar Novo Administrador';
+                submitButton.innerHTML = '<i class="fas fa-save me-1"></i> Cadastrar Administrador';
+            } else {
+                this.classList.remove('border-primary');
+                this.classList.add('border-info');
+                cardHeader.innerHTML = '<i class="fas fa-user-plus me-2"></i> Cadastrar Novo Usuário Comum';
+                submitButton.innerHTML = '<i class="fas fa-save me-1"></i> Cadastrar Usuário Comum';
+            }
+        });
+
+        // Inicializar estilo
+        if (tipoUsuarioSelect.value === 'true') {
+            tipoUsuarioSelect.classList.add('border-primary');
+        } else {
+            tipoUsuarioSelect.classList.add('border-info');
+        }
+    });
+</script>

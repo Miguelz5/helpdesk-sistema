@@ -5,6 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore; // Se estiver usando Entity Framework
 
 namespace HelpDesk.Controllers
 {

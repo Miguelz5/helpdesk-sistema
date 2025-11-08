@@ -11,6 +11,8 @@ namespace HelpDesk.Data
         public DbSet<Chamado> Chamados { get; set; }
         public DbSet<Faq> Faqs { get; set; }
         public DbSet<Comentario> Comentarios { get; set; }
+        public DbSet<Anexo> Anexos { get; set; } 
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configurações opcionais para as tabelas

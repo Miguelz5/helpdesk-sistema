@@ -1,10 +1,10 @@
-﻿using HelpDesk.Data;
-using HelpDesk.Models;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization; // ← ADICIONAR ESTE USING
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HelpDesk.Models;
+using HelpDesk.Data;
 using System.Security.Claims;
 
 namespace HelpDesk.Controllers
@@ -18,8 +18,32 @@ namespace HelpDesk.Controllers
             _context = context;
         }
 
-        // GET: Usuarios/Perfil - Meu perfil
-        [Authorize] // ← AGORA VAI FUNCIONAR
+        // ✅ MÉTODO INDEX ATUALIZADO - MOSTRA APENAS ADMINISTRADORES
+        [Authorize]
+        public async Task<IActionResult> Index()
+        {
+            // ✅ FILTRAR APENAS ADMINISTRADORES
+            var administradores = await _context.Usuarios
+                .Where(u => u.IsAdministrador == true)
+                .ToListAsync();
+
+            return View(administradores);
+        }
+
+        // ✅ NOVO MÉTODO PARA USUÁRIOS COMUNS
+        [Authorize]
+        public async Task<IActionResult> UsuariosComuns()
+        {
+            // ✅ FILTRAR APENAS USUÁRIOS COMUNS
+            var usuariosComuns = await _context.Usuarios
+                .Where(u => u.IsAdministrador == false)
+                .ToListAsync();
+
+            return View(usuariosComuns);
+        }
+
+        // GET: Usuarios/Perfil
+        [Authorize]
         public async Task<IActionResult> Perfil()
         {
             // Pegar ID do usuário logado
@@ -34,7 +58,7 @@ namespace HelpDesk.Controllers
             return View(usuario);
         }
 
-        // POST: Usuarios/Perfil - Editar meu perfil
+        // POST: Usuarios/Perfil
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
@@ -45,7 +69,7 @@ namespace HelpDesk.Controllers
 
             if (usuarioId != usuario.Id)
             {
-                return Forbid(); // Não pode editar outro usuário
+                return Forbid();
             }
 
             // Remover validação da senha para permitir campo vazio
@@ -102,39 +126,13 @@ namespace HelpDesk.Controllers
             return View(usuario);
         }
 
-        // Método para atualizar o cookie de autenticação
-        private async Task UpdateAuthCookie(Usuario usuario)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, usuario.Nome),
-                new Claim(ClaimTypes.Email, usuario.Email),
-                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
-                new Claim("IsAdmin", usuario.IsAdministrador.ToString())
-            };
-
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-
-            await HttpContext.SignInAsync(claimsPrincipal);
-        }
-
-        // GET: Usuarios
-        [Authorize] // ← PROTEGER A LISTA DE USUÁRIOS
-        public async Task<IActionResult> Index()
-        {
-            var usuarios = await _context.Usuarios.ToListAsync();
-            return View(usuarios);
-        }
-
-        // GET: Usuarios/Create
         [Authorize]
-        public IActionResult Create()
+        public IActionResult Create(string from)
         {
+            ViewBag.FromUsuariosComuns = (from == "usuarioscomuns");
             return View();
         }
 
-        // POST: Usuarios/Create
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
@@ -150,13 +148,52 @@ namespace HelpDesk.Controllers
                 }
 
                 usuario.DataCadastro = DateTime.Now;
-                usuario.IsAdministrador = true;
 
                 _context.Add(usuario);
                 await _context.SaveChangesAsync();
 
-                TempData["MensagemSucesso"] = "Administrador cadastrado com sucesso!";
-                return RedirectToAction(nameof(Index));
+                if (usuario.IsAdministrador)
+                {
+                    TempData["MensagemSucesso"] = "Administrador cadastrado com sucesso!";
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    TempData["MensagemSucesso"] = "Usuário comum cadastrado com sucesso!";
+                    return RedirectToAction(nameof(UsuariosComuns));
+                }
+            }
+            return View(usuario);
+        }
+
+        [Authorize]
+        public IActionResult CreateUsuarioComum()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateUsuarioComum(Usuario usuario)
+        {
+            if (ModelState.IsValid)
+            {
+                // Verificar se email já existe
+                if (await _context.Usuarios.AnyAsync(u => u.Email == usuario.Email))
+                {
+                    ModelState.AddModelError("Email", "Este email já está cadastrado");
+                    return View(usuario);
+                }
+
+                usuario.DataCadastro = DateTime.Now;
+                usuario.IsAdministrador = false;
+
+                _context.Add(usuario);
+                await _context.SaveChangesAsync();
+
+                TempData["MensagemSucesso"] = "Usuário comum cadastrado com sucesso!";
+                return RedirectToAction(nameof(UsuariosComuns));
             }
             return View(usuario);
         }
@@ -202,9 +239,17 @@ namespace HelpDesk.Controllers
                         return NotFound();
                     }
 
+                    // Verificar se email já existe (exceto para o próprio usuário)
+                    if (await _context.Usuarios.AnyAsync(u => u.Email == usuario.Email && u.Id != id))
+                    {
+                        ModelState.AddModelError("Email", "Este email já está em uso por outro usuário");
+                        return View(usuario);
+                    }
+
                     // Atualizar apenas os campos permitidos
                     usuarioExistente.Nome = usuario.Nome;
                     usuarioExistente.Email = usuario.Email;
+                    usuarioExistente.IsAdministrador = usuario.IsAdministrador; // ✅ PERMITIR ALTERAR TIPO
 
                     // Só atualiza a senha se foi informada
                     if (!string.IsNullOrEmpty(usuario.Senha))
@@ -215,7 +260,14 @@ namespace HelpDesk.Controllers
                     _context.Update(usuarioExistente);
                     await _context.SaveChangesAsync();
 
-                    TempData["MensagemSucesso"] = "Administrador atualizado com sucesso!";
+                    // Se o usuário editou o próprio perfil, atualizar o cookie
+                    var usuarioLogadoId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                    if (usuarioLogadoId == id)
+                    {
+                        await UpdateAuthCookie(usuarioExistente);
+                    }
+
+                    TempData["MensagemSucesso"] = "Usuário atualizado com sucesso!";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -228,7 +280,16 @@ namespace HelpDesk.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+
+                // ✅ REDIRECIONAR PARA A LISTA CORRETA
+                if (usuario.IsAdministrador)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    return RedirectToAction(nameof(UsuariosComuns));
+                }
             }
             return View(usuario);
         }
@@ -263,6 +324,9 @@ namespace HelpDesk.Controllers
 
             if (usuario != null)
             {
+                // ✅ SALVAR O TIPO DO USUÁRIO ANTES DE EXCLUIR
+                var isAdministrador = usuario.IsAdministrador;
+
                 _context.Usuarios.Remove(usuario);
                 await _context.SaveChangesAsync();
 
@@ -275,10 +339,37 @@ namespace HelpDesk.Controllers
                     return RedirectToAction("Login", "Auth");
                 }
 
-                TempData["MensagemSucesso"] = "Administrador excluído com sucesso!";
+                TempData["MensagemSucesso"] = "Usuário excluído com sucesso!";
+
+                // ✅ REDIRECIONAR PARA A LISTA CORRETA
+                if (isAdministrador)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    return RedirectToAction(nameof(UsuariosComuns));
+                }
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // Método para atualizar o cookie de autenticação
+        private async Task UpdateAuthCookie(Usuario usuario)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, usuario.Nome),
+                new Claim(ClaimTypes.Email, usuario.Email),
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                new Claim("IsAdmin", usuario.IsAdministrador.ToString())
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+            await HttpContext.SignInAsync(claimsPrincipal);
         }
 
         private bool UsuarioExists(int id)
